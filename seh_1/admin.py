@@ -1,42 +1,49 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import AdminSite
+from django.db.models import F, Sum
 
-from .models import Component, Product, ProductComponent
+from .models import Component, Product, ProductComponent, ProductProduction
 
 
-@admin.register(Component)
 class ComponentAdmin(admin.ModelAdmin):
+    # Add the fields to search for autocomplete functionality
+    search_fields = ['name']
     list_display = ('name', 'measurement')
-
-
-# @admin.register(ProductComponent)
-# class ProductComponentAdmin(admin.ModelAdmin):
-#     list_display = ('product', 'component', 'quantity')
 
 
 class ProductComponentInline(admin.TabularInline):
     model = ProductComponent
     extra = 1
-
-
-class ProductAdminForm(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ['name']
+    fields = ['component', 'quantity',]
+    autocomplete_fields = ['component']
+    verbose_name_plural = 'Produkt Komponentlari'
+    verbose_name = 'komponent'
 
 
 class ProductAdmin(admin.ModelAdmin):
-    form = ProductAdminForm
     inlines = [ProductComponentInline]
+    list_display = ('name', 'get_made_product_count')
 
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            get_made_product_count=Sum('productproduction__quantity'))
+        return queryset
 
-        # Update the quantity for each ProductComponent
-        for formset in formsets:
-            instances = formset.save(commit=False)
-            for instance in instances:
-                instance.save()
+    def get_made_product_count(self, obj):
+        return obj.get_made_product_count or 0
+
+    get_made_product_count.short_description = 'kesilmaganlar soni'
+    get_made_product_count.admin_order_field = 'get_made_product_count'
 
 
+class ProductProductionAdmin(admin.ModelAdmin):
+    list_display = ('series', 'product', 'quantity', 'production_date')
+    list_filter = ('product', 'production_date')
+    ordering = ('production_date',)
+
+
+admin.site.register(Component, ComponentAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(ProductProduction, ProductProductionAdmin)
