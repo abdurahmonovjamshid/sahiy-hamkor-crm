@@ -72,10 +72,26 @@ class ProductProductionAdmin(admin.ModelAdmin):
 
 
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'arrival_time')
+    list_display = ('__str__', 'user', 'arrival_time')
     list_filter = ('arrival_time', 'component')
     date_hierarchy = 'arrival_time'
     ordering = ('-arrival_time',)
+    exclude = ('user',)
+
+    def save_model(self, request, obj, form, change):
+        if not obj.user_id:
+            obj.user = request.user
+        obj.save()
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and not request.user.is_superuser:
+            return obj.user == request.user
+        return super().has_change_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and not request.user.is_superuser:
+            return obj.user == request.user
+        return super().has_change_permission(request, obj)
 
 
 admin.site.register(Component, ComponentAdmin)

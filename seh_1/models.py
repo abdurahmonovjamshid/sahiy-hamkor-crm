@@ -57,13 +57,14 @@ class ProductProduction(models.Model):
     ]
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name='xodim', null=True, blank=True)
+        User, on_delete=models.SET_NULL, verbose_name='xodim', null=True, blank=True)
 
     series = models.CharField(max_length=50, verbose_name="Seriya")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Produkt')
     quantity = models.PositiveIntegerField()
-    production_date = models.DateTimeField(auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
+    production_date = models.DateTimeField(
+        auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='kesilmagan')
 
@@ -82,6 +83,9 @@ class Warehouse(models.Model):
     quantity = models.IntegerField(verbose_name="Miqdor")
     arrival_time = models.DateTimeField(
         auto_now_add=True, verbose_name='Keltirilgan sana')
+
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='xodim')
 
     class Meta:
         verbose_name = 'Keltirilgan Komponentlar '

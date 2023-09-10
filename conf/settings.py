@@ -112,13 +112,19 @@ JAZZMIN_SETTINGS = {
     "site_header": "Library",
     "site_brand": "Saxiy Hamkor",
     "site_logo": "logo/logo.png",
-    "search_model": ["auth.User", "seh_1.product"],
+    "search_model": ["auth.User"],
+
+    "usermenu_links": [
+        {"name": "Support", "url": "https://t.me/Jamshid_Abdurahmonov1",
+            "new_window": True},
+        {"model": "auth.user"}
+    ],
 
     "topmenu_links": [
 
         {"name": "Home",  "url": "admin:index",
             "permissions": ["auth.view_user"]},
-        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues",
+        {"name": "Support", "url": "https://t.me/Jamshid_Abdurahmonov1",
             "new_window": True},
         {"model": "auth.User"},
         {"app": "seh_1"},
