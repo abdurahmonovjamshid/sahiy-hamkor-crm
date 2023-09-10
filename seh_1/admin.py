@@ -1,20 +1,86 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.db.models import F, Sum
 from django.utils import timezone
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from .models import (Component, Product, ProductComponent, ProductProduction,
                      Warehouse)
+
+
+class CustomUserAdmin(UserAdmin):
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+
+        # Hide "Permissions" fieldset for non-superusers
+        if not request.user.is_superuser:
+            fieldsets = [
+                (None, {'fields': ('username', 'password')}),
+                (_('Personal info'), {
+                 'fields': ('first_name', 'last_name', 'email')}),
+            ]
+
+        return fieldsets
+
+    def get_queryset(self, request):
+        # Get the queryset based on the user
+        queryset = super().get_queryset(request)
+
+        # Exclude superusers from any filtering
+        if not request.user.is_superuser:
+            queryset = queryset.exclude(is_superuser=True)
+
+        return queryset
+
+    def has_change_permission(self, request, obj=None):
+        # Allow users to change their own profile
+        if obj is not None and not request.user.is_superuser:
+            return obj == request.user
+
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        # Restrict users from deleting any user
+        if obj is not None and not request.user.is_superuser:
+            return False
+
+        return super().has_delete_permission(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        # Block non-superusers from making themselves superusers
+        if not request.user.is_superuser and obj.is_superuser:
+            obj.is_superuser = False
+
+        super().save_model(request, obj, form, change)
+
+
+admin.site.unregister(User)  # Unregister the default UserAdmin
+# Register with the custom CustomUserAdmin
+admin.site.register(User, CustomUserAdmin)
 
 
 class ComponentAdmin(admin.ModelAdmin):
     # Add the fields to search for autocomplete functionality
     search_fields = ['name']
     list_filter = ('measurement',)
-    list_display = ('name', 'total',
-                    'measurement')
+    list_display = ('name', 'highlight_total', 'measurement')
     ordering = ('total',)
+
+    def highlight_total(self, obj):
+        if obj.total < 700:  # Specify your desired threshold value here
+            return format_html(
+                '<span style="background-color:#FF0E0E; color:white; padding: 2px 5px;">{}</span>',
+                obj.total
+            )
+        return obj.total
+
+    highlight_total.short_description = 'Umumiy'
+    highlight_total.admin_order_field = 'total'
 
 
 class ProductComponentInline(admin.TabularInline):
