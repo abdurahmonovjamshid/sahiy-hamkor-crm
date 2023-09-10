@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://abdurahmonovjamshid.jprq.live',
+    'https://saxiyhamkor.pythonanywhere.com/'
 ]
 
 MIDDLEWARE = [
