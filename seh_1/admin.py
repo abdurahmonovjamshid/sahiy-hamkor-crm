@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.db.models import F, Sum
+from django.utils import timezone
 
 from .models import Component, Product, ProductComponent, ProductProduction
 
@@ -26,6 +27,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_made_product_count')
 
     def get_queryset(self, request):
+        print('/'*88)
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
             get_made_product_count=Sum('productproduction__quantity'))
@@ -39,9 +41,21 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class ProductProductionAdmin(admin.ModelAdmin):
-    list_display = ('series', 'product', 'quantity', 'production_date')
-    list_filter = ('product', 'production_date')
-    ordering = ('production_date',)
+    list_display = ('series', 'product', 'quantity', 'user', 'production_date')
+    list_filter = ('user', 'product', 'production_date')
+    exclude = ('user',)
+    ordering = ('-production_date',)
+
+    def save_model(self, request, obj, form, change):
+        if not obj.user_id:
+            obj.user = request.user
+        obj.save()
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        return qs.filter(production_date__month=current_month, production_date__year=current_year)
 
 
 admin.site.register(Component, ComponentAdmin)

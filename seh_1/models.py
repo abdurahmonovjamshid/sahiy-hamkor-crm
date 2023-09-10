@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -14,7 +15,7 @@ class Component(models.Model):
 
     class Meta:
         verbose_name = 'Komponent '
-        verbose_name_plural = '1. Komponentlar'
+        verbose_name_plural = 'Komponentlar'
 
     def __str__(self):
         return self.name + f' ({self.get_measurement_display()})'
@@ -27,7 +28,7 @@ class Product(models.Model):
 
     class Meta:
         verbose_name = 'Produkt '
-        verbose_name_plural = '2. Produktlar'
+        verbose_name_plural = 'Produktlar'
 
     def __str__(self):
         return self.name
@@ -53,6 +54,9 @@ class ProductProduction(models.Model):
         ('kesilmagan', 'Kesilmagan'),
     ]
 
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name='xodim', null=True, blank=True)
+
     series = models.CharField(max_length=50, verbose_name="Seriya")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Produkt')
@@ -62,8 +66,8 @@ class ProductProduction(models.Model):
         max_length=20, choices=STATUS_CHOICES, default='kesilmagan')
 
     class Meta:
-        verbose_name = '3. Tovar '
-        verbose_name_plural = '3. Ishlab Chiqarilgan Tovarlar'
+        verbose_name = 'Tovar '
+        verbose_name_plural = 'Ishlab Chiqarilgan Tovarlar'
 
     def __str__(self):
         formatted_date = self.production_date.strftime('%B %Y, %H:%M')
