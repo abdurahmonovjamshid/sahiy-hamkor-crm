@@ -61,7 +61,7 @@ ROOT_URLCONF = 'conf.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -108,21 +108,33 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 JAZZMIN_SETTINGS = {
-    "site_title" : "Sahiy Hamkor",
+    "site_title": "Sahiy Hamkor",
+    "site_header": "Library",
+    "site_brand": "Saxiy Hamkor",
+    "site_logo": "logo/logo.png",
+    "search_model": ["auth.User", "seh_1.product"],
+
     "topmenu_links": [
 
-        # Url that gets reversed (Permissions can be added)
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
-
-        # external url that opens in a new window (Permissions can be added)
-        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
-
-        # model admin to link to (Permissions checked against model)
+        {"name": "Home",  "url": "admin:index",
+            "permissions": ["auth.view_user"]},
+        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues",
+            "new_window": True},
         {"model": "auth.User"},
-
-        # App with dropdown menu to all its models pages (Permissions checked against models)
         {"app": "seh_1"},
     ],
+    "show_sidebar": True,
+    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.productproduction"],
+
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "seh_1.component": "fas fa-cubes",
+        "seh_1.product": "fas fa-shopping-bag",
+        "seh_1.productproduction": "fas fa-industry",
+        "seh_1.warehouse": "fas fa-warehouse",
+    },
 }
 
 # Internationalization

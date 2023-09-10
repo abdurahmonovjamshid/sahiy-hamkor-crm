@@ -20,6 +20,8 @@ from django.contrib import admin
 from django.urls import path, re_path
 from django.views.static import serve
 
+from seh_1 import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^media/(?P<path>.*)$', serve,

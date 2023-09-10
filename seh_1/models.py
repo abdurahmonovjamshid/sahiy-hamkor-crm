@@ -13,6 +13,8 @@ class Component(models.Model):
     measurement = models.CharField(
         max_length=2, choices=MEASUREMENT_CHOICES, verbose_name="O'lchov birligi")
 
+    total = models.FloatField(default=0, verbose_name='umumiy')
+
     class Meta:
         verbose_name = 'Komponent '
         verbose_name_plural = 'Komponentlar'
@@ -72,3 +74,18 @@ class ProductProduction(models.Model):
     def __str__(self):
         formatted_date = self.production_date.strftime('%B %Y, %H:%M')
         return f'{self.quantity} {self.product} ({formatted_date})'
+
+
+class Warehouse(models.Model):
+    component = models.ForeignKey(
+        Component, on_delete=models.CASCADE, verbose_name='Komponent')
+    quantity = models.IntegerField(verbose_name="Miqdor")
+    arrival_time = models.DateTimeField(
+        auto_now_add=True, verbose_name='Keltirilgan sana')
+
+    class Meta:
+        verbose_name = 'Keltirilgan Komponentlar '
+        verbose_name_plural = 'Ombor'
+
+    def __str__(self):
+        return f"{self.quantity}{self.component.get_measurement_display()} - {self.component.name}"

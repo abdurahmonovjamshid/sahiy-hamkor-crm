@@ -4,13 +4,16 @@ from django.contrib.admin import AdminSite
 from django.db.models import F, Sum
 from django.utils import timezone
 
-from .models import Component, Product, ProductComponent, ProductProduction
+from .models import (Component, Product, ProductComponent, ProductProduction,
+                     Warehouse)
 
 
 class ComponentAdmin(admin.ModelAdmin):
     # Add the fields to search for autocomplete functionality
     search_fields = ['name']
-    list_display = ('name', 'measurement')
+    list_filter = ('measurement',)
+    list_display = ('name', 'total',
+                    'measurement')
 
 
 class ProductComponentInline(admin.TabularInline):
@@ -27,7 +30,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_made_product_count')
 
     def get_queryset(self, request):
-        print('/'*88)
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
             get_made_product_count=Sum('productproduction__quantity'))
@@ -44,6 +46,7 @@ class ProductProductionAdmin(admin.ModelAdmin):
     list_display = ('series', 'product', 'quantity', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date')
     exclude = ('user',)
+    date_hierarchy = 'production_date'
     ordering = ('-production_date',)
 
     def save_model(self, request, obj, form, change):
@@ -58,6 +61,14 @@ class ProductProductionAdmin(admin.ModelAdmin):
         return qs.filter(production_date__month=current_month, production_date__year=current_year)
 
 
+class WarehouseAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'arrival_time')
+    list_filter = ('arrival_time', 'component')
+    date_hierarchy = 'arrival_time'
+    ordering = ('-arrival_time',)
+
+
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductProduction, ProductProductionAdmin)
+admin.site.register(Warehouse, WarehouseAdmin)
