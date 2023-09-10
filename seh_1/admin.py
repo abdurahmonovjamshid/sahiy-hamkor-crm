@@ -14,6 +14,7 @@ class ComponentAdmin(admin.ModelAdmin):
     list_filter = ('measurement',)
     list_display = ('name', 'total',
                     'measurement')
+    ordering = ('total',)
 
 
 class ProductComponentInline(admin.TabularInline):
@@ -58,7 +59,16 @@ class ProductProductionAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         current_month = timezone.now().month
         current_year = timezone.now().year
+
         return qs.filter(production_date__month=current_month, production_date__year=current_year)
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and not request.user.is_superuser:
+            return obj.user == request.user
+        return super().has_change_permission(request, obj)
 
 
 class WarehouseAdmin(admin.ModelAdmin):

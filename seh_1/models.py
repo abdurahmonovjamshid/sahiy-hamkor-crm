@@ -63,7 +63,7 @@ class ProductProduction(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Produkt')
     quantity = models.PositiveIntegerField()
-    production_date = models.DateTimeField(auto_now_add=True)
+    production_date = models.DateTimeField(auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='kesilmagan')
 

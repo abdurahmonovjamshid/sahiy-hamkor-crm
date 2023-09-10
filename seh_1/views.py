@@ -16,24 +16,24 @@ def subtract_component_total(sender, instance, created, **kwargs):
             component.save()
 
 
-@receiver(pre_save, sender=ProductProduction)
-def edit_component_total(sender, instance, **kwargs):
-    if instance.pk:
-        original_instance = ProductProduction.objects.get(pk=instance.pk)
-        product_components = original_instance.product.productcomponent_set.all()
-        for product_component in product_components:
-            old_quantity_by_component = product_component.quantity * original_instance.quantity
-            component = product_component.component
-            component.total += old_quantity_by_component
-            component.save()
-            print(component.total)
+# @receiver(pre_save, sender=ProductProduction)
+# def edit_component_total(sender, instance, **kwargs):
+#     if instance.pk:
+#         old_instance = ProductProduction.objects.get(pk=instance.pk)
+#         product_components = old_instance.product.productcomponent_set.all()
+#         for product_component in product_components:
+#             old_quantity_by_component = product_component.quantity * old_instance.quantity
+#             component = product_component.component
+#             component.total += old_quantity_by_component
+#             component.save()
+#             print(component.total)
 
-    product_components = instance.product.productcomponent_set.all()
-    for product_component in product_components:
-        new_quantity_by_component = product_component.quantity * instance.quantity
-        component = product_component.component
-        component.total -= new_quantity_by_component
-        component.save()
+#     product_components = instance.product.productcomponent_set.all()
+#     for product_component in product_components:
+#         new_quantity_by_component = product_component.quantity * instance.quantity
+#         component = product_component.component
+#         component.total -= new_quantity_by_component
+#         component.save()
 
 
 @receiver(post_delete, sender=ProductProduction)
