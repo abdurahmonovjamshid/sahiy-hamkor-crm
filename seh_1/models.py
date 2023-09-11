@@ -9,6 +9,11 @@ class Component(models.Model):
         ('pc', 'Dona'),
     ]
 
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, blank=True, null=True, related_name='children',
+        verbose_name="Bo'lim"
+    )
+
     name = models.CharField(max_length=100, verbose_name='Nomi')
     measurement = models.CharField(
         max_length=2, choices=MEASUREMENT_CHOICES, verbose_name="O'lchov birligi")
