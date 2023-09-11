@@ -7,6 +7,7 @@ from django.db.models import F, Sum
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from mptt.admin import DraggableMPTTAdmin
 
 from .models import (Component, Product, ProductComponent, ProductProduction,
                      Warehouse)
@@ -64,20 +65,24 @@ admin.site.unregister(User)  # Unregister the default UserAdmin
 admin.site.register(User, CustomUserAdmin)
 
 
-class ComponentAdmin(admin.ModelAdmin):
-    # Add the fields to search for autocomplete functionality
-    search_fields = ['name']
-    list_filter = ('measurement',)
-    list_display = ('name', 'highlight_total', 'measurement')
-    ordering = ('total',)
+class ComponentAdmin(DraggableMPTTAdmin):
+    mptt_indent_field = "title"
+    list_display = ('tree_actions', 'indented_title',
+                    'highlight_total', 'measurement')
+    list_filter = ('parent',)
+    autocomplete_fields = ('parent',)
+    search_fields = ('title',)
 
     def highlight_total(self, obj):
-        if obj.total < 700:  # Specify your desired threshold value here
-            return format_html(
-                '<span style="background-color:#FF0E0E; color:white; padding: 2px 5px;">{}</span>',
-                obj.total
-            )
-        return obj.total
+        if obj.parent:
+            if obj.total < 700:  # Specify your desired threshold value here
+                return format_html(
+                    '<span style="background-color:#FF0E0E; color:white; padding: 2px 5px;">{}</span>',
+                    obj.total
+                )
+            return obj.total
+        elif not obj.parent and obj.highlight:
+            return format_html('<span style="background-color:#FF0E0E; color:white; padding: 2px 10px;">-</span>')
 
     highlight_total.short_description = 'Umumiy'
     highlight_total.admin_order_field = 'total'

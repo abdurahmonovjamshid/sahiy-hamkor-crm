@@ -1,20 +1,21 @@
 from django.contrib.auth.models import User
 from django.db import models
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 
 
-class Component(models.Model):
+class Component(MPTTModel):
     MEASUREMENT_CHOICES = [
         ('kg', 'Kilogram'),
         ('l', 'Litr'),
         ('pc', 'Dona'),
     ]
 
-    parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, blank=True, null=True, related_name='children',
-        verbose_name="Bo'lim"
-    )
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, verbose_name="Bo'limlar",
+                               limit_choices_to={'parent__isnull': True},
+                               related_name='children', null=True, blank=True, )
 
-    name = models.CharField(max_length=100, verbose_name='Nomi')
+    title = models.CharField(max_length=100, verbose_name='Nomi')
     measurement = models.CharField(
         max_length=2, choices=MEASUREMENT_CHOICES, verbose_name="O'lchov birligi")
 
@@ -24,14 +25,25 @@ class Component(models.Model):
         verbose_name = 'Komponent '
         verbose_name_plural = 'Komponentlar'
 
+    class MPTTMeta:
+        order_insertion_by = ['title']
+
     def __str__(self):
-        return self.name + f' ({self.get_measurement_display()})'
+        return self.title + f' ({self.get_measurement_display()})'
+
+    @property
+    def highlight(self):
+        children = self.children.all()
+        for child in children:
+            if child.total < 700:
+                return True
+        return False
 
 
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nomi')
     components = models.ManyToManyField(
-        Component, through='ProductComponent', verbose_name='Komponentlar')
+        Component, through='ProductComponent', verbose_name='Komponentlar', limit_choices_to={'parent__isnull': False})
 
     class Meta:
         verbose_name = 'Produkt '
@@ -45,7 +57,7 @@ class ProductComponent(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='product')
     component = models.ForeignKey(
-        Component, on_delete=models.CASCADE, verbose_name="Komponent")
+        Component, on_delete=models.CASCADE, verbose_name="Komponent", limit_choices_to={'parent__isnull': False})
     quantity = models.FloatField(verbose_name="miqdor")
 
     class Meta:
@@ -84,7 +96,7 @@ class ProductProduction(models.Model):
 
 class Warehouse(models.Model):
     component = models.ForeignKey(
-        Component, on_delete=models.CASCADE, verbose_name='Komponent')
+        Component, on_delete=models.CASCADE, verbose_name='Komponent', limit_choices_to={'parent__isnull': False})
     quantity = models.IntegerField(verbose_name="Miqdor")
     arrival_time = models.DateTimeField(
         auto_now_add=True, verbose_name='Keltirilgan sana')
@@ -97,4 +109,4 @@ class Warehouse(models.Model):
         verbose_name_plural = 'Ombor'
 
     def __str__(self):
-        return f"{self.quantity}{self.component.get_measurement_display()} - {self.component.name}"
+        return f"{self.quantity}{self.component.get_measurement_display()} - {self.component.title}"

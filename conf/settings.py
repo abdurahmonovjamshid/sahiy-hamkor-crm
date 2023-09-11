@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'mptt',
     'seh_1'
 ]
 
@@ -144,6 +145,11 @@ JAZZMIN_SETTINGS = {
     },
 }
 
+# JAZZMIN_UI_TWEAKS = {
+#     "theme": "default",
+#     "dark_mode_theme": "darkly",
+# }
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -160,7 +166,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_ROOT = 'static'
-STATIC_ROOT = 'C:/Users/acer/OneDrive/Desktop/sahiy-hamkor/staticfiles/'
+STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'staticfiles'),
