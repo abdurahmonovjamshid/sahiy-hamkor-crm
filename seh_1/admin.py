@@ -9,8 +9,8 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from mptt.admin import DraggableMPTTAdmin
 
-from .models import (Component, Product, ProductComponent, ProductProduction,
-                     Warehouse)
+from .models import (Component, CuttingEvent, Product, ProductComponent,
+                     ProductProduction, ProductReProduction, Warehouse)
 
 
 class CustomUserAdmin(UserAdmin):
@@ -102,8 +102,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'total_new', 'total_cut', 'total_sold')
 
 
-
-
 class ProductProductionAdmin(admin.ModelAdmin):
     list_display = ('series', 'product', 'quantity', 'total_cut',
                     'total_sold', 'user', 'production_date')
@@ -155,6 +153,36 @@ class WarehouseAdmin(admin.ModelAdmin):
             return obj.user == request.user
         return super().has_change_permission(request, obj)
 
+
+class CuttingEventInline(admin.TabularInline):
+    model = CuttingEvent
+    extra = 1
+    fields = ('product_production', 'quantity_cut')
+    autocomplete_fields = ('product_reproduction',)
+
+
+class ProductReProductionAdmin(admin.ModelAdmin):
+    inlines = [CuttingEventInline]
+    list_display = ['user', 'total_cut', 're_production_date']
+    search_fields = ['product_reproduction']
+    readonly_fields = ('user',)
+
+    def total_cut(self, obj):
+        total_cut = 0
+        for cuttingevent in obj .cutting.all():
+            total_cut += cuttingevent.quantity_cut
+        return total_cut
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super().save_model(request, obj, form, change)
+
+    def has_change_permission(self, request, obj=None):
+        return False
+    # Add other desired configurations for the admin view
+
+
+admin.site.register(ProductReProduction, ProductReProductionAdmin)
 
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(Product, ProductAdmin)

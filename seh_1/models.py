@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
-from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 
 
@@ -78,7 +79,6 @@ class ProductComponent(models.Model):
 
 
 class ProductProduction(models.Model):
-
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, verbose_name='xodim', null=True, blank=True)
 
@@ -120,3 +120,42 @@ class Warehouse(models.Model):
 
     def __str__(self):
         return f"{self.quantity}{self.component.get_measurement_display()} - {self.component.title}"
+
+
+class ProductReProduction(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True)
+    re_production_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        formatted_date = self.re_production_date.strftime('%B %Y, %H:%M')
+        return f'{self.user} ({formatted_date})'
+
+
+class CuttingEvent(models.Model):
+    product_production = models.ForeignKey(
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut': 0})
+    quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
+    product_reproduction = models.ForeignKey(
+        ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
+
+    def delete(self, *args, **kwargs):
+        self.product_production.quantity += self.quantity_cut
+        self.product_production.total_cut -= self.quantity_cut
+        self.product_production.save()
+        super().delete(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.product_production:
+            if self.quantity_cut > self.product_production.quantity:
+                raise ValidationError(
+                    "CutProduct quantity cannot exceed ProductProduction quantity.")
+
+    def __str__(self):
+        return f"{self.quantity_cut} cut from {self.product_production}"
+
+    class Meta:
+        verbose_name = 'Cutting Event'
+        verbose_name_plural = 'Cutting Events'
+        unique_together = ['product_production', 'product_reproduction']

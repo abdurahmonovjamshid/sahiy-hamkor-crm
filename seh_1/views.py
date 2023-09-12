@@ -1,7 +1,7 @@
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
-from .models import ProductProduction, Warehouse
+from .models import CuttingEvent, ProductProduction, Warehouse
 
 
 @receiver(post_save, sender=ProductProduction)
@@ -79,3 +79,37 @@ def update_component_total_on_delete(sender, instance, **kwargs):
     component = instance.component
     component.total -= instance.quantity
     component.save()
+
+
+@receiver(post_save, sender=CuttingEvent)
+def curring_create(sender, instance, created, **kwargs):
+    if created:
+        try:
+            pr_production = instance.product_production
+            pr_production.quantity -= instance.quantity_cut
+            pr_production.total_cut += instance.quantity_cut
+            pr_production.save()
+
+            product = pr_production.product
+            product.total_new -= instance.quantity_cut
+            product.total_cut += instance.quantity_cut
+            product.save()
+        except Exception as e:
+            print(e)
+
+
+@receiver(post_delete, sender=CuttingEvent)
+def cutting_delete(sender, instance, **kwargs):
+    try:
+        print('/'*888)
+        pr_production = instance.product_production
+        pr_production.quantity += instance.quantity_cut
+        pr_production.total_cut -= instance.quantity_cut
+        pr_production.save()
+
+        product = pr_production.product
+        product.total_new += instance.quantity_cut
+        product.total_cut -= instance.quantity_cut
+        product.save()
+    except Exception as e:
+        print(e)
