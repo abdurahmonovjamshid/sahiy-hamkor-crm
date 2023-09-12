@@ -8,6 +8,10 @@ from .models import ProductProduction, Warehouse
 def subtract_component_total(sender, instance, created, **kwargs):
     if created:
         product_components = instance.product.productcomponent_set.all()
+        product = instance.product
+        product.total_new += instance.quantity
+        product.save()
+
         for product_component in product_components:
             total_quantity_by_component = product_component.quantity * \
                 instance.quantity
@@ -39,6 +43,10 @@ def subtract_component_total(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=ProductProduction)
 def delete_component_total(sender, instance, **kwargs):
     product_components = instance.product.productcomponent_set.all()
+    product = instance.product
+    product.total_new -= instance.quantity
+    product.save()
+
     for product_component in product_components:
         total_quantity_by_component = product_component.quantity * \
             instance.quantity

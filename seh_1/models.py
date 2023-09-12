@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 
@@ -20,6 +21,8 @@ class Component(MPTTModel):
         max_length=2, choices=MEASUREMENT_CHOICES, verbose_name="O'lchov birligi")
 
     total = models.FloatField(default=0, verbose_name='umumiy')
+    notification_limit = models.IntegerField(
+        default=500, verbose_name="Ogohlantirish")
 
     class Meta:
         verbose_name = 'Komponent '
@@ -35,7 +38,7 @@ class Component(MPTTModel):
     def highlight(self):
         children = self.children.all()
         for child in children:
-            if child.total < 700:
+            if child.total < child.notification_limit:
                 return True
         return False
 
@@ -44,6 +47,13 @@ class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nomi')
     components = models.ManyToManyField(
         Component, through='ProductComponent', verbose_name='Komponentlar', limit_choices_to={'parent__isnull': False})
+
+    total_new = models.IntegerField(
+        default=0, verbose_name="Kesilmaganlar soni")
+    total_cut = models.IntegerField(
+        default=0, verbose_name="Kesilganlar soni")
+    total_sold = models.IntegerField(
+        default=0, verbose_name="sotilganlar soni")
 
     class Meta:
         verbose_name = 'Produkt '
@@ -68,10 +78,6 @@ class ProductComponent(models.Model):
 
 
 class ProductProduction(models.Model):
-    STATUS_CHOICES = [
-        ('kesilgan', 'Kesilgan'),
-        ('kesilmagan', 'Kesilmagan'),
-    ]
 
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, verbose_name='xodim', null=True, blank=True)
@@ -79,19 +85,23 @@ class ProductProduction(models.Model):
     series = models.CharField(max_length=50, verbose_name="Seriya")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Produkt')
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(verbose_name="Kesilmaganlar soni")
+    total_cut = models.IntegerField(
+        default=0, verbose_name="Kesilganlar soni")
+    total_sold = models.IntegerField(
+        default=0, verbose_name="sotilganlar soni")
+
     production_date = models.DateTimeField(
         auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='kesilmagan')
 
     class Meta:
         verbose_name = 'Tovar '
         verbose_name_plural = 'Ishlab Chiqarilgan Tovarlar'
 
     def __str__(self):
-        formatted_date = self.production_date.strftime('%B %Y, %H:%M')
-        return f'{self.quantity} {self.product} ({formatted_date})'
+        local_production_date = timezone.localtime(self.production_date)
+        formatted_date = local_production_date.strftime('%D, %H:%M')
+        return f'{self.series}-{self.product} ({formatted_date})'
 
 
 class Warehouse(models.Model):

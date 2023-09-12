@@ -75,7 +75,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
 
     def highlight_total(self, obj):
         if obj.parent:
-            if obj.total < 700:  # Specify your desired threshold value here
+            if obj.total < obj.notification_limit:  # Specify your desired threshold value here
                 return format_html(
                     '<span style="background-color:#FF0E0E; color:white; padding: 2px 5px;">{}</span>',
                     obj.total
@@ -99,25 +99,16 @@ class ProductComponentInline(admin.TabularInline):
 
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
-    list_display = ('name', 'get_made_product_count')
+    list_display = ('name', 'total_new', 'total_cut', 'total_sold')
 
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.annotate(
-            get_made_product_count=Sum('productproduction__quantity'))
-        return queryset
 
-    def get_made_product_count(self, obj):
-        return obj.get_made_product_count or 0
-
-    get_made_product_count.short_description = 'kesilmaganlar soni'
-    get_made_product_count.admin_order_field = 'get_made_product_count'
 
 
 class ProductProductionAdmin(admin.ModelAdmin):
-    list_display = ('series', 'product', 'quantity', 'user', 'production_date')
+    list_display = ('series', 'product', 'quantity', 'total_cut',
+                    'total_sold', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date')
-    exclude = ('user',)
+    exclude = ('user', 'total_cut', 'total_sold')
     date_hierarchy = 'production_date'
     ordering = ('-production_date',)
 
