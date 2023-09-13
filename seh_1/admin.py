@@ -105,7 +105,7 @@ class ProductAdmin(admin.ModelAdmin):
 class ProductProductionAdmin(admin.ModelAdmin):
     list_display = ('series', 'product', 'quantity', 'total_cut',
                     'total_sold', 'user', 'production_date')
-    list_filter = ('user', 'product', 'production_date')
+    list_filter = ('user', 'product', 'production_date', 'series')
     exclude = ('user', 'total_cut', 'total_sold')
     date_hierarchy = 'production_date'
     ordering = ('-production_date',)

@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-kh^ce^2&9sw%_0of$9zd5i766(%&k53*8@(#k1w2fj2xs39g_2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -133,7 +133,7 @@ JAZZMIN_SETTINGS = {
         {"app": "seh_1"},
     ],
     "show_sidebar": True,
-    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.productproduction"],
+    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse"],
 
     "icons": {
         "auth": "fas fa-users-cog",
@@ -143,6 +143,7 @@ JAZZMIN_SETTINGS = {
         "seh_1.product": "fas fa-shopping-bag",
         "seh_1.productproduction": "fas fa-industry",
         "seh_1.warehouse": "fas fa-warehouse",
+        "seh_1.productreproduction": "fas fa-cut",
     },
 }
 

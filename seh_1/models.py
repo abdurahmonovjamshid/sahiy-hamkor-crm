@@ -101,7 +101,7 @@ class ProductProduction(models.Model):
     def __str__(self):
         local_production_date = timezone.localtime(self.production_date)
         formatted_date = local_production_date.strftime('%D, %H:%M')
-        return f'{self.series}-{self.product} ({formatted_date})'
+        return f'{self.series}-{self.product} ({self.quantity} dona) ({formatted_date})'
 
 
 class Warehouse(models.Model):
@@ -130,6 +130,10 @@ class ProductReProduction(models.Model):
     def __str__(self):
         formatted_date = self.re_production_date.strftime('%B %Y, %H:%M')
         return f'{self.user} ({formatted_date})'
+    
+    class Meta:
+        verbose_name = 'Kesilgan tovarlar '
+        verbose_name_plural = 'Kesish Bo\'limi'
 
 
 class CuttingEvent(models.Model):
