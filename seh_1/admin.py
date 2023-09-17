@@ -10,7 +10,8 @@ from django.utils.translation import gettext_lazy as _
 from mptt.admin import DraggableMPTTAdmin
 
 from .models import (Component, CuttingEvent, Product, ProductComponent,
-                     ProductProduction, ProductReProduction, Warehouse)
+                     ProductProduction, ProductReProduction, Sales, SalesEvent,
+                     SalesEvent2, Warehouse)
 
 
 class CustomUserAdmin(UserAdmin):
@@ -182,9 +183,32 @@ class ProductReProductionAdmin(admin.ModelAdmin):
     # Add other desired configurations for the admin view
 
 
+class SalesEventInline(admin.TabularInline):
+    model = SalesEvent
+    extra = 1
+    fields = ('cut_product', 'quantity_sold')
+    autocomplete_fields = ('sales',)
+
+
+class SalesEventInline2(admin.TabularInline):
+    model = SalesEvent2
+    extra = 1
+    fields = ('cut_product', 'quantity_sold')
+    autocomplete_fields = ('sales',)
+
+
+class SalesAdmin(admin.ModelAdmin):
+    inlines = [SalesEventInline, SalesEventInline2]
+    list_display = ['buyer', 'seller', 'date']
+    search_fields = ['buyer']
+    readonly_fields = ('seller',)
+
+
 admin.site.register(ProductReProduction, ProductReProductionAdmin)
 
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductProduction, ProductProductionAdmin)
 admin.site.register(Warehouse, WarehouseAdmin)
+
+admin.site.register(Sales, SalesAdmin)

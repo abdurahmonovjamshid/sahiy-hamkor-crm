@@ -135,7 +135,7 @@ JAZZMIN_SETTINGS = {
         {"app": "seh_1"},
     ],
     "show_sidebar": True,
-    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse"],
+    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse", 'seh_1.productreproduction'],
 
     "icons": {
         "auth": "fas fa-users-cog",
@@ -146,6 +146,7 @@ JAZZMIN_SETTINGS = {
         "seh_1.productproduction": "fas fa-industry",
         "seh_1.warehouse": "fas fa-warehouse",
         "seh_1.productreproduction": "fas fa-cut",
+        "seh_1.sales": "fas fa-shopping-cart",
     },
 }
 

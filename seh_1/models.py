@@ -130,7 +130,7 @@ class ProductReProduction(models.Model):
     def __str__(self):
         formatted_date = self.re_production_date.strftime('%B %Y, %H:%M')
         return f'{self.user} ({formatted_date})'
-    
+
     class Meta:
         verbose_name = 'Kesilgan tovarlar '
         verbose_name_plural = 'Kesish Bo\'limi'
@@ -143,12 +143,6 @@ class CuttingEvent(models.Model):
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
 
-    def delete(self, *args, **kwargs):
-        self.product_production.quantity += self.quantity_cut
-        self.product_production.total_cut -= self.quantity_cut
-        self.product_production.save()
-        super().delete(*args, **kwargs)
-
     def clean(self):
         super().clean()
         if self.product_production:
@@ -157,9 +151,34 @@ class CuttingEvent(models.Model):
                     "CutProduct quantity cannot exceed ProductProduction quantity.")
 
     def __str__(self):
-        return f"{self.quantity_cut} cut from {self.product_production}"
+        return f"{self.quantity_cut} cut from {self.product_production.series}-{self.product_production.product}"
 
     class Meta:
         verbose_name = 'Cutting Event'
         verbose_name_plural = 'Cutting Events'
         unique_together = ['product_production', 'product_reproduction']
+
+
+class Sales(models.Model):
+    buyer = models.CharField(max_length=250, verbose_name='Haridor')
+    seller = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Sotuvchi')
+    date = models.DateTimeField(auto_now_add=True)
+
+
+class SalesEvent(models.Model):
+    cut_product = models.ForeignKey(
+        CuttingEvent, on_delete=models.CASCADE, null=False, blank=False)
+    quantity_sold = models.PositiveIntegerField(
+        verbose_name="Sotilganlar soni")
+    sales = models.ForeignKey(
+        Sales, on_delete=models.CASCADE, related_name='selling_cut')
+
+
+class SalesEvent2(models.Model):
+    cut_product = models.ForeignKey(
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False)
+    quantity_sold = models.PositiveIntegerField(
+        verbose_name="Sotilganlar soni")
+    sales = models.ForeignKey(
+        Sales, on_delete=models.CASCADE, related_name='selling')
