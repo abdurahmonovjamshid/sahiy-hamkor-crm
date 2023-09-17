@@ -176,7 +176,7 @@ class SalesEvent(models.Model):
 
 
 class SalesEvent2(models.Model):
-    cut_product = models.ForeignKey(
+    non_cut_product = models.ForeignKey(
         ProductProduction, on_delete=models.CASCADE, null=False, blank=False)
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
