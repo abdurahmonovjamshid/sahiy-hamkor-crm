@@ -193,7 +193,7 @@ class SalesEventInline(admin.TabularInline):
 class SalesEventInline2(admin.TabularInline):
     model = SalesEvent2
     extra = 1
-    fields = ('cut_product', 'quantity_sold')
+    fields = ('non_cut_product', 'quantity_sold')
     autocomplete_fields = ('sales',)
 
 
