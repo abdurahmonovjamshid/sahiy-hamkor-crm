@@ -168,7 +168,7 @@ class Sales(models.Model):
 
 class SalesEvent(models.Model):
     cut_product = models.ForeignKey(
-        CuttingEvent, on_delete=models.CASCADE, null=False, blank=False)
+        CuttingEvent, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity_cut__gt': 0})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
@@ -177,7 +177,7 @@ class SalesEvent(models.Model):
 
 class SalesEvent2(models.Model):
     non_cut_product = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False)
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
