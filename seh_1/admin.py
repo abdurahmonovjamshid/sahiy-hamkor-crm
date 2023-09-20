@@ -201,7 +201,27 @@ class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
     list_display = ['buyer', 'seller', 'date']
     search_fields = ['buyer']
-    readonly_fields = ('seller',)
+    # readonly_fields = ('seller',)
+    exclude = ('seller',)
+
+    def save_model(self, request, obj, form, change):
+        # Set the current logged-in user as the seller
+        obj.seller = request.user
+        obj.save()
+
+    def has_change_permission(self, request, obj=None):
+        # Allow superuser to change/edit
+        if request.user.is_superuser:
+            return True
+        # Restrict regular users from change/edit
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Allow superuser to delete
+        if request.user.is_superuser:
+            return True
+        # Restrict regular users from delete
+        return False
 
 
 admin.site.register(ProductReProduction, ProductReProductionAdmin)
