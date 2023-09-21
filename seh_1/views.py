@@ -1,7 +1,8 @@
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
-from .models import CuttingEvent, ProductProduction, Warehouse
+from .models import (CuttingEvent, ProductProduction, SalesEvent, SalesEvent2,
+                     Warehouse)
 
 
 @receiver(post_save, sender=ProductProduction)
@@ -101,7 +102,6 @@ def curring_create(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=CuttingEvent)
 def cutting_delete(sender, instance, **kwargs):
     try:
-        print('/'*888)
         pr_production = instance.product_production
         pr_production.quantity += instance.quantity_cut
         pr_production.total_cut -= instance.quantity_cut
@@ -110,6 +110,82 @@ def cutting_delete(sender, instance, **kwargs):
         product = pr_production.product
         product.total_new += instance.quantity_cut
         product.total_cut -= instance.quantity_cut
+        product.save()
+    except Exception as e:
+        print(e)
+
+
+@receiver(post_save, sender=SalesEvent)
+def sales_create(sender, instance, created, **kwargs):
+    if created:
+        try:
+            cuttingevent = instance.cut_product
+            cuttingevent.quantity_cut -= instance.quantity_sold
+            cuttingevent.quantity_sold += instance.quantity_sold
+            cuttingevent.save()
+
+            pr_production = cuttingevent.product_production
+            pr_production.total_cut -= instance.quantity_sold
+            pr_production.total_sold += instance.quantity_sold
+            pr_production.save()
+
+            product = pr_production.product
+            product.total_cut -= instance.quantity_sold
+            product.total_sold += instance.quantity_sold
+            product.save()
+        except Exception as e:
+            print(e)
+
+
+@receiver(post_delete, sender=SalesEvent)
+def sales_delete(sender, instance, **kwargs):
+    try:
+        cuttingevent = instance.cut_product
+        cuttingevent.quantity_cut += instance.quantity_sold
+        cuttingevent.quantity_sold -= instance.quantity_sold
+        cuttingevent.save()
+
+        pr_production = cuttingevent.product_production
+        pr_production.total_cut += instance.quantity_sold
+        pr_production.total_sold -= instance.quantity_sold
+        pr_production.save()
+
+        product = pr_production.product
+        product.total_cut += instance.quantity_sold
+        product.total_sold -= instance.quantity_sold
+        product.save()
+    except Exception as e:
+        print(e)
+
+
+@receiver(post_save, sender=SalesEvent2)
+def sales2_create(sender, instance, created, **kwargs):
+    if created:
+        try:
+            pr_production = instance.non_cut_product
+            pr_production.quantity -= instance.quantity_sold
+            pr_production.total_sold += instance.quantity_sold
+            pr_production.save()
+
+            product = pr_production.product
+            product.total_new -= instance.quantity_sold
+            product.total_sold += instance.quantity_sold
+            product.save()
+        except Exception as e:
+            print(e)
+
+
+@receiver(post_delete, sender=SalesEvent2)
+def sales2_delete(sender, instance, **kwargs):
+    try:
+        pr_production = instance.non_cut_product
+        pr_production.quantity += instance.quantity_sold
+        pr_production.total_sold -= instance.quantity_sold
+        pr_production.save()
+
+        product = pr_production.product
+        product.total_new += instance.quantity_sold
+        product.total_sold -= instance.quantity_sold
         product.save()
     except Exception as e:
         print(e)

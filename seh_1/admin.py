@@ -158,8 +158,9 @@ class WarehouseAdmin(admin.ModelAdmin):
 class CuttingEventInline(admin.TabularInline):
     model = CuttingEvent
     extra = 1
-    fields = ('product_production', 'quantity_cut')
+    fields = ('product_production', 'quantity_cut', 'quantity_sold')
     autocomplete_fields = ('product_reproduction',)
+    readonly_fields = ('quantity_sold',)
 
 
 class ProductReProductionAdmin(admin.ModelAdmin):
@@ -171,7 +172,7 @@ class ProductReProductionAdmin(admin.ModelAdmin):
     def total_cut(self, obj):
         total_cut = 0
         for cuttingevent in obj .cutting.all():
-            total_cut += cuttingevent.quantity_cut
+            total_cut += cuttingevent.quantity_cut + cuttingevent.quantity_sold
         return total_cut
 
     def save_model(self, request, obj, form, change):
@@ -210,10 +211,6 @@ class SalesAdmin(admin.ModelAdmin):
         obj.save()
 
     def has_change_permission(self, request, obj=None):
-        # Allow superuser to change/edit
-        if request.user.is_superuser:
-            return True
-        # Restrict regular users from change/edit
         return False
 
     def has_delete_permission(self, request, obj=None):

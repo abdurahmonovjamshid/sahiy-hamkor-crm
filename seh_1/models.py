@@ -143,6 +143,9 @@ class CuttingEvent(models.Model):
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
 
+    quantity_sold = models.PositiveIntegerField(
+        verbose_name="Sotilganlar soni", default=0)
+
     def clean(self):
         super().clean()
         if self.product_production:
@@ -174,6 +177,18 @@ class SalesEvent(models.Model):
     sales = models.ForeignKey(
         Sales, on_delete=models.CASCADE, related_name='selling_cut')
 
+    def clean(self):
+        super().clean()
+        if self.cut_product:
+            if self.quantity_sold > self.cut_product.quantity_cut:
+                raise ValidationError(
+                    "sold quantity cannot exceed Cut quantity.")
+
+    class Meta:
+        verbose_name = 'Sales Event'
+        verbose_name_plural = 'Sales Events'
+        unique_together = ['cut_product', 'sales']
+
 
 class SalesEvent2(models.Model):
     non_cut_product = models.ForeignKey(
@@ -182,3 +197,15 @@ class SalesEvent2(models.Model):
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
         Sales, on_delete=models.CASCADE, related_name='selling')
+
+    def clean(self):
+        super().clean()
+        if self.non_cut_product:
+            if self.quantity_sold > self.non_cut_product.quantity:
+                raise ValidationError(
+                    "sold quantity cannot exceed non cut quantity.")
+
+    class Meta:
+        verbose_name = 'Sales Event2'
+        verbose_name_plural = 'Sales Event2s'
+        unique_together = ['non_cut_product', 'sales']
