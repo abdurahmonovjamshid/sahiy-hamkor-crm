@@ -151,14 +151,14 @@ class CuttingEvent(models.Model):
         if self.product_production:
             if self.quantity_cut > self.product_production.quantity:
                 raise ValidationError(
-                    "CutProduct quantity cannot exceed ProductProduction quantity.")
+                    "Kesilgan qiymat ishlab chiqarilgan qiymatdan oshib ketdi")
 
     def __str__(self):
         return f"{self.quantity_cut} cut from {self.product_production.series}-{self.product_production.product}"
 
     class Meta:
-        verbose_name = 'Cutting Event'
-        verbose_name_plural = 'Cutting Events'
+        verbose_name = 'Kesish'
+        verbose_name_plural = 'Kesish'
         unique_together = ['product_production', 'product_reproduction']
 
 
@@ -167,6 +167,10 @@ class Sales(models.Model):
     seller = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Sotuvchi')
     date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Sotuv '
+        verbose_name_plural = "Sotuv Bo'limi "
 
 
 class SalesEvent(models.Model):
@@ -182,11 +186,11 @@ class SalesEvent(models.Model):
         if self.cut_product:
             if self.quantity_sold > self.cut_product.quantity_cut:
                 raise ValidationError(
-                    "sold quantity cannot exceed Cut quantity.")
+                    "sotilgan qiymat kesilgan qiymatdan oshib ketdi")
 
     class Meta:
-        verbose_name = 'Sales Event'
-        verbose_name_plural = 'Sales Events'
+        verbose_name = 'Kesilgan mahsulot'
+        verbose_name_plural = 'Kesilgan mahsulotlar'
         unique_together = ['cut_product', 'sales']
 
 
@@ -203,9 +207,9 @@ class SalesEvent2(models.Model):
         if self.non_cut_product:
             if self.quantity_sold > self.non_cut_product.quantity:
                 raise ValidationError(
-                    "sold quantity cannot exceed non cut quantity.")
+                    "sotilgan qiymat kesilmagan qiymatdan oshib ketdi")
 
     class Meta:
-        verbose_name = 'Sales Event2'
-        verbose_name_plural = 'Sales Event2s'
+        verbose_name = 'Kesilmagan mahsulot'
+        verbose_name_plural = 'Kesilmagan mahsulot'
         unique_together = ['non_cut_product', 'sales']
