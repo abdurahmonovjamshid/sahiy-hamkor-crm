@@ -46,8 +46,6 @@ class Component(MPTTModel):
 
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nomi')
-    components = models.ManyToManyField(
-        Component, through='ProductComponent', verbose_name='Komponentlar', limit_choices_to={'parent__isnull': False})
 
     total_new = models.IntegerField(
         default=0, verbose_name="Kesilmaganlar soni")
@@ -138,7 +136,7 @@ class ProductReProduction(models.Model):
 
 class CuttingEvent(models.Model):
     product_production = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut': 0})
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut': 0}, verbose_name='Tovar')
     quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')

@@ -102,12 +102,18 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
     list_display = ('name', 'total_new', 'total_cut', 'total_sold')
 
+    fieldsets = (
+        ('Umumiy malumot', {
+            'fields': ('name', 'total_new', 'total_cut', 'total_sold'),
+        }),
+    )
+
 
 class ProductProductionAdmin(admin.ModelAdmin):
     list_display = ('series', 'product', 'quantity', 'total_cut',
                     'total_sold', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date', 'series')
-    exclude = ('user', 'total_cut', 'total_sold')
+    readonly_fields = ('user', 'total_cut', 'total_sold', 'production_date')
     date_hierarchy = 'production_date'
     ordering = ('-production_date',)
 
@@ -174,6 +180,15 @@ class ProductReProductionAdmin(admin.ModelAdmin):
         for cuttingevent in obj .cutting.all():
             total_cut += cuttingevent.quantity_cut + cuttingevent.quantity_sold
         return total_cut
+
+    total_cut.short_description = 'Umumiy kesilganlar'
+    total_cut.admin_order_field = 'total_cut'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(total_cut=Sum(
+            F('cutting__quantity_cut') + F('cutting__quantity_sold')))
+        return queryset
 
     def save_model(self, request, obj, form, change):
         obj.user = request.user
