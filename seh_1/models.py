@@ -170,6 +170,9 @@ class Sales(models.Model):
         verbose_name = 'Sotuv '
         verbose_name_plural = "Sotuv Bo'limi "
 
+    def __str__(self):
+        return self.buyer
+
 
 class SalesEvent(models.Model):
     cut_product = models.ForeignKey(
@@ -191,6 +194,9 @@ class SalesEvent(models.Model):
         verbose_name_plural = 'Kesilgan mahsulotlar'
         unique_together = ['cut_product', 'sales']
 
+    def __str__(self):
+        return str(self.quantity_sold)+' ta '+self.cut_product.product_production.product.name
+
 
 class SalesEvent2(models.Model):
     non_cut_product = models.ForeignKey(
@@ -211,3 +217,6 @@ class SalesEvent2(models.Model):
         verbose_name = 'Kesilmagan mahsulot'
         verbose_name_plural = 'Kesilmagan mahsulot'
         unique_together = ['non_cut_product', 'sales']
+
+    def __str__(self):
+        return str(self.quantity_sold)+' ta '+self.non_cut_product.product.name

@@ -171,9 +171,14 @@ class CuttingEventInline(admin.TabularInline):
 
 class ProductReProductionAdmin(admin.ModelAdmin):
     inlines = [CuttingEventInline]
-    list_display = ['user', 'total_cut', 're_production_date']
+    list_display = ['user', 'total_cut',
+                    'get_cutting_events', 're_production_date']
     search_fields = ['product_reproduction']
     readonly_fields = ('user',)
+
+    def get_cutting_events(self, obj):
+        cutting_events = obj.cutting.all()
+        return ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' +cutting_event.product_production.product.name) for cutting_event in cutting_events)
 
     def total_cut(self, obj):
         total_cut = 0
@@ -215,10 +220,23 @@ class SalesEventInline2(admin.TabularInline):
 
 class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
-    list_display = ['buyer', 'seller', 'date']
+    list_display = ['buyer', 'seller',
+                    'get_sales_events', 'get_sales_event2s', 'date']
     search_fields = ['buyer']
     # readonly_fields = ('seller',)
     exclude = ('seller',)
+
+    def get_sales_events(self, obj):
+        sales_events = obj.selling_cut.all()
+        return ", ".join(str(sale_event) for sale_event in sales_events)
+
+    get_sales_events.short_description = 'Kesilgan mahsulotlar'
+
+    def get_sales_event2s(self, obj):
+        sales_event2s = obj.selling.all()
+        return ", ".join(str(sale_event2) for sale_event2 in sales_event2s)
+
+    get_sales_event2s.short_description = 'Kesilmagan mahsulotlar'
 
     def save_model(self, request, obj, form, change):
         # Set the current logged-in user as the seller
