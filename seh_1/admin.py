@@ -100,11 +100,12 @@ class ProductComponentInline(admin.TabularInline):
 
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
-    list_display = ('name', 'total_new', 'total_cut', 'total_sold')
+    list_display = ('name', 'total_new', 'total_cut',
+                    'total_sold', 'total_sold_price')
 
     fieldsets = (
         ('Umumiy malumot', {
-            'fields': ('name', 'total_new', 'total_cut', 'total_sold'),
+            'fields': ('name', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
         }),
     )
 
@@ -178,7 +179,7 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 
     def get_cutting_events(self, obj):
         cutting_events = obj.cutting.all()
-        return ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' +cutting_event.product_production.product.name) for cutting_event in cutting_events)
+        return ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' + cutting_event.product_production.product.name) for cutting_event in cutting_events)
 
     def total_cut(self, obj):
         total_cut = 0
@@ -207,14 +208,14 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 class SalesEventInline(admin.TabularInline):
     model = SalesEvent
     extra = 1
-    fields = ('cut_product', 'quantity_sold')
+    fields = ('cut_product', 'quantity_sold', 'total_sold_price')
     autocomplete_fields = ('sales',)
 
 
 class SalesEventInline2(admin.TabularInline):
     model = SalesEvent2
     extra = 1
-    fields = ('non_cut_product', 'quantity_sold')
+    fields = ('non_cut_product', 'quantity_sold', 'total_sold_price')
     autocomplete_fields = ('sales',)
 
 

@@ -54,6 +54,9 @@ class Product(models.Model):
     total_sold = models.IntegerField(
         default=0, verbose_name="sotilganlar soni")
 
+    total_sold_price = models.FloatField(
+        verbose_name='Umumiy sotilgan narxi', default=0)
+
     class Meta:
         verbose_name = 'Produkt '
         verbose_name_plural = 'Produktlar'
@@ -181,6 +184,8 @@ class SalesEvent(models.Model):
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
         Sales, on_delete=models.CASCADE, related_name='selling_cut')
+    total_sold_price = models.FloatField(
+        verbose_name='Umumiy sotilgan narxi')
 
     def clean(self):
         super().clean()
@@ -205,6 +210,9 @@ class SalesEvent2(models.Model):
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
         Sales, on_delete=models.CASCADE, related_name='selling')
+
+    total_sold_price = models.FloatField(
+        verbose_name='Umumiy sotilgan narxi')
 
     def clean(self):
         super().clean()

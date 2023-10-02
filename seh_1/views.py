@@ -45,12 +45,13 @@ def subtract_component_total(sender, instance, created, **kwargs):
 def delete_component_total(sender, instance, **kwargs):
     product_components = instance.product.productcomponent_set.all()
     product = instance.product
-    product.total_new -= instance.quantity
+    product.total_new -= instance.quantity + \
+        instance.total_cut + instance.total_sold
     product.save()
 
     for product_component in product_components:
         total_quantity_by_component = product_component.quantity * \
-            instance.quantity
+            (instance.quantity + instance.total_cut + instance.total_sold)
         component = product_component.component
         component.total += total_quantity_by_component
         component.save()
@@ -95,6 +96,7 @@ def curring_create(sender, instance, created, **kwargs):
             product.total_new -= instance.quantity_cut
             product.total_cut += instance.quantity_cut
             product.save()
+
         except Exception as e:
             print(e)
 
@@ -102,15 +104,19 @@ def curring_create(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=CuttingEvent)
 def cutting_delete(sender, instance, **kwargs):
     try:
+
         pr_production = instance.product_production
-        pr_production.quantity += instance.quantity_cut
-        pr_production.total_cut -= instance.quantity_cut
+        pr_production.quantity += instance.quantity_cut + instance.quantity_sold
+        pr_production.total_cut -= instance.quantity_cut + instance.quantity_sold
         pr_production.save()
 
         product = pr_production.product
-        product.total_new += instance.quantity_cut
-        product.total_cut -= instance.quantity_cut
+        product.total_new += instance.quantity_cut + instance.quantity_sold
+        product.total_cut -= instance.quantity_cut + instance.quantity_sold
         product.save()
+        product_reproduction = instance.product_reproduction
+        if product_reproduction.cutting.all().count() == 0:
+            product_reproduction.delete()
     except Exception as e:
         print(e)
 
@@ -132,7 +138,9 @@ def sales_create(sender, instance, created, **kwargs):
             product = pr_production.product
             product.total_cut -= instance.quantity_sold
             product.total_sold += instance.quantity_sold
+            product.total_sold_price += instance.total_sold_price
             product.save()
+
         except Exception as e:
             print(e)
 
@@ -153,7 +161,12 @@ def sales_delete(sender, instance, **kwargs):
         product = pr_production.product
         product.total_cut += instance.quantity_sold
         product.total_sold -= instance.quantity_sold
+        product.total_sold_price -= instance.total_sold_price
         product.save()
+
+        sales = instance.sales
+        if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
+            sales.delete()
     except Exception as e:
         print(e)
 
@@ -170,6 +183,7 @@ def sales2_create(sender, instance, created, **kwargs):
             product = pr_production.product
             product.total_new -= instance.quantity_sold
             product.total_sold += instance.quantity_sold
+            product.total_sold_price += instance.total_sold_price
             product.save()
         except Exception as e:
             print(e)
@@ -186,6 +200,11 @@ def sales2_delete(sender, instance, **kwargs):
         product = pr_production.product
         product.total_new += instance.quantity_sold
         product.total_sold -= instance.quantity_sold
+        product.total_sold_price -= instance.total_sold_price
         product.save()
+
+        sales = instance.sales
+        if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
+            sales.delete()
     except Exception as e:
         print(e)
