@@ -101,13 +101,33 @@ class ProductComponentInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
     list_display = ('name', 'total_new', 'total_cut',
-                    'total_sold', 'total_sold_price')
+                    'total_sold', 'get_total_sold_price')
 
     fieldsets = (
         ('Umumiy malumot', {
             'fields': ('name', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
         }),
     )
+
+    def get_total_sold_price(self, obj):
+        formatted_price = "{:,.1f}".format(obj.total_sold_price)
+        return formatted_price
+    get_total_sold_price.short_description = "Umumiy sotilgan narxi"
+    get_total_sold_price.admin_order_field = 'total_sold_price'
+
+    change_list_template = 'admin/product_change_list.html'
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        queryset = self.get_queryset(request)
+        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))['total_price'] or 0
+        formatted_price = "{:,.1f}".format(total_price)
+
+        response.context_data['summary_line'] = f"Kassa: {formatted_price}"
+        return response
+    
+    
 
 
 class ProductProductionAdmin(admin.ModelAdmin):
@@ -208,24 +228,49 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 class SalesEventInline(admin.TabularInline):
     model = SalesEvent
     extra = 1
-    fields = ('cut_product', 'quantity_sold', 'total_sold_price')
+    fields = ('cut_product', 'quantity_sold',
+              'single_sold_price', 'total_sold_price')
     autocomplete_fields = ('sales',)
+
+    readonly_fields = ['total_sold_price']
 
 
 class SalesEventInline2(admin.TabularInline):
     model = SalesEvent2
     extra = 1
-    fields = ('non_cut_product', 'quantity_sold', 'total_sold_price')
+    fields = ('non_cut_product', 'quantity_sold',
+              'single_sold_price', 'total_sold_price')
+    readonly_fields = ('total_sold_price',)
     autocomplete_fields = ('sales',)
 
 
 class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
     list_display = ['buyer', 'seller',
-                    'get_sales_events', 'get_sales_event2s', 'date']
+                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'date']
     search_fields = ['buyer']
     # readonly_fields = ('seller',)
     exclude = ('seller',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            total_price=Sum('selling_cut__total_sold_price') +
+            Sum('selling__total_sold_price')
+        )
+        return queryset
+
+    def get_total_price(self, obj):
+        sales_events = obj.selling_cut.all()
+        total_price = sum(event.total_sold_price for event in sales_events)
+
+        sales_events2 = obj.selling.all()
+        total_price2 = sum(event.total_sold_price for event in sales_events2)
+        formatted_price = "{:,.1f}".format(total_price + total_price2)
+        return formatted_price
+
+    get_total_price.short_description = 'Narx'
+    get_total_price.admin_order_field = 'total_price'
 
     def get_sales_events(self, obj):
         sales_events = obj.selling_cut.all()

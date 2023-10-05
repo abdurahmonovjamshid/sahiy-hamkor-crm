@@ -1,9 +1,12 @@
+from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.http import HttpResponse
 from django.utils import timezone
 from mptt.models import MPTTModel
+from openpyxl import Workbook
 
 
 class Component(MPTTModel):
@@ -63,6 +66,34 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    def export_excel(self, request):
+        products = self.get_queryset(request)
+
+        # Create a new workbook
+        workbook = Workbook()
+        worksheet = workbook.active
+
+        # Write headers
+        # Example headers, adjust as per your model fields
+        headers = ['Name', 'Price', 'Quantity']
+        worksheet.append(headers)
+
+        # Write data rows
+        for product in products:
+            # Example data, adjust as per your model fields
+            row = [product.name, product.price, product.quantity]
+            worksheet.append(row)
+
+        # Set the response headers for file download
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=products.xlsx'
+
+        # Save workbook to response
+        workbook.save(response)
+
+        return response
 
 
 class ProductComponent(models.Model):
@@ -184,6 +215,9 @@ class SalesEvent(models.Model):
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
         Sales, on_delete=models.CASCADE, related_name='selling_cut')
+    single_sold_price = models.FloatField(
+        verbose_name='sotilgan narxi')
+
     total_sold_price = models.FloatField(
         verbose_name='Umumiy sotilgan narxi')
 
@@ -193,6 +227,10 @@ class SalesEvent(models.Model):
             if self.quantity_sold > self.cut_product.quantity_cut:
                 raise ValidationError(
                     "sotilgan qiymat kesilgan qiymatdan oshib ketdi")
+
+    def save(self, *args, **kwargs):
+        self.total_sold_price = self.single_sold_price * self.quantity_sold
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Kesilgan mahsulot'
@@ -211,6 +249,9 @@ class SalesEvent2(models.Model):
     sales = models.ForeignKey(
         Sales, on_delete=models.CASCADE, related_name='selling')
 
+    single_sold_price = models.FloatField(
+        verbose_name='sotilgan narxi')
+
     total_sold_price = models.FloatField(
         verbose_name='Umumiy sotilgan narxi')
 
@@ -220,6 +261,10 @@ class SalesEvent2(models.Model):
             if self.quantity_sold > self.non_cut_product.quantity:
                 raise ValidationError(
                     "sotilgan qiymat kesilmagan qiymatdan oshib ketdi")
+
+    def save(self, *args, **kwargs):
+        self.total_sold_price = self.single_sold_price * self.quantity_sold
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Kesilmagan mahsulot'

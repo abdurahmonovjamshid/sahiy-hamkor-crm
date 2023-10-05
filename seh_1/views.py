@@ -1,8 +1,44 @@
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.http import HttpResponse
+from openpyxl import Workbook
 
-from .models import (CuttingEvent, ProductProduction, SalesEvent, SalesEvent2,
-                     Warehouse)
+from .models import (CuttingEvent, Product, ProductProduction, SalesEvent,
+                     SalesEvent2, Warehouse)
+
+
+def export_excel(request):
+    products = Product.objects.all()
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    # Write headers
+    headers = ['Nomi', 'Kesilmaganlar soni', 'Kesilganlar soni',
+               'Sotilganlar soni', 'Umumiy sotilgan narxi']
+    worksheet.append(headers)
+
+    # Write data rows
+    for product in products:
+        row = [
+            product.name,
+            product.total_new,
+            product.total_cut,
+            product.total_sold,
+            "{:,.1f}".format(product.total_sold_price)
+        ]
+        worksheet.append(row)
+
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=products.xlsx'
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
 
 
 @receiver(post_save, sender=ProductProduction)
