@@ -140,6 +140,7 @@ class Warehouse(models.Model):
     component = models.ForeignKey(
         Component, on_delete=models.CASCADE, verbose_name='Komponent', limit_choices_to={'parent__isnull': False})
     quantity = models.IntegerField(verbose_name="Miqdor")
+    price = models.FloatField(default=0, verbose_name='Narxi')
     arrival_time = models.DateTimeField(
         auto_now_add=True, verbose_name='Keltirilgan sana')
 
@@ -151,7 +152,7 @@ class Warehouse(models.Model):
         verbose_name_plural = 'Ombor'
 
     def __str__(self):
-        return f"{self.quantity}{self.component.get_measurement_display()} - {self.component.title}"
+        return f"{self.quantity} {self.component.get_measurement_display()} - {self.component.title}"
 
 
 class ProductReProduction(models.Model):

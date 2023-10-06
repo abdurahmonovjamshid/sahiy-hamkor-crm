@@ -12,6 +12,7 @@ from mptt.admin import DraggableMPTTAdmin
 from .models import (Component, CuttingEvent, Product, ProductComponent,
                      ProductProduction, ProductReProduction, Sales, SalesEvent,
                      SalesEvent2, Warehouse)
+from .views import export_warehouse_excel
 
 
 class CustomUserAdmin(UserAdmin):
@@ -100,6 +101,8 @@ class ProductComponentInline(admin.TabularInline):
 
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
+    list_filter = ['name']
+    search_fields = ('name',)
     list_display = ('name', 'total_new', 'total_cut',
                     'total_sold', 'get_total_sold_price')
 
@@ -121,13 +124,12 @@ class ProductAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))['total_price'] or 0
+        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
+            'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
         response.context_data['summary_line'] = f"Kassa: {formatted_price}"
         return response
-    
-    
 
 
 class ProductProductionAdmin(admin.ModelAdmin):
@@ -160,11 +162,31 @@ class ProductProductionAdmin(admin.ModelAdmin):
 
 
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'arrival_time')
+    list_display = ('__str__', 'get_price', 'user', 'arrival_time')
     list_filter = ('arrival_time', 'component')
     date_hierarchy = 'arrival_time'
     ordering = ('-arrival_time',)
     exclude = ('user',)
+
+    change_list_template = 'admin/warehouse_change_list.html'
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        queryset = self.get_queryset(request)
+        total_price = queryset.aggregate(total_price=Sum('price'))[
+            'total_price'] or 0
+        formatted_price = "{:,.1f}".format(total_price)
+
+        response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
+        return response
+
+    def get_price(self, obj):
+        formatted_price = "{:,.1f}".format(obj.price)
+        return formatted_price
+        
+    get_price.short_description = 'Narxi'
+    get_price.admin_order_field = 'price'
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:

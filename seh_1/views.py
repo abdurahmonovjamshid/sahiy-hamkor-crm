@@ -1,7 +1,13 @@
+from datetime import datetime
+
+from django.db.models import Q
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.http import HttpResponse
 from openpyxl import Workbook
+from openpyxl.styles import Alignment
+from openpyxl.utils import get_column_letter
+from pytz import timezone
 
 from .models import (CuttingEvent, Product, ProductProduction, SalesEvent,
                      SalesEvent2, Warehouse)
@@ -13,6 +19,18 @@ def export_excel(request):
     # Create a new workbook
     workbook = Workbook()
     worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        products = products.filter(Q(name__icontains=search_query))
+
+    # Apply filters based on request parameters
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+
+    if filters:
+        products = products.filter(**filters)
 
     # Write headers
     headers = ['Nomi', 'Kesilmaganlar soni', 'Kesilganlar soni',
@@ -34,6 +52,66 @@ def export_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=products.xlsx'
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
+
+
+def export_warehouse_excel(request):
+    queryset = Warehouse.objects.all()
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        queryset = queryset.filter(Q(name__icontains=search_query))
+
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+    if filters:
+        queryset = queryset.filter(**filters)
+
+    # Write headers
+    headers = ['Komponent', 'Miqdori',
+               'Keltirilgan narxi', 'Keltirilgan vaqti', 'Xodim']
+    worksheet.append(headers)
+
+    # Write data rows
+    for warehouse in queryset:
+        row = [
+            str(warehouse.component),
+            warehouse.quantity,
+            warehouse.price,
+            warehouse.arrival_time,
+            warehouse.user.username,
+
+        ]
+        worksheet.append(row)
+
+    # Remove time zone information from arrival_time
+    for column in worksheet.iter_cols(min_col=4, max_col=4, min_row=2):
+        for cell in column:
+            if cell.value:
+                cell.value = cell.value.replace(tzinfo=None)
+
+    # Set column alignment
+    for column in worksheet.columns:
+        column_letter = get_column_letter(column[0].column)
+        alignment = Alignment(horizontal='left')
+        worksheet.column_dimensions[column_letter].alignment = alignment
+
+    # Set column width for Arrival Time
+    worksheet.column_dimensions['D'].width = 20
+
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=warehouse.xlsx'
 
     # Save workbook to response
     workbook.save(response)

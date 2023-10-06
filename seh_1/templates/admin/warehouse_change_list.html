@@ -2,10 +2,10 @@
 
 {% block result_list %}
     <div style="display: flex; justify-content: space-between; align-items: baseline;">
-        <div>{{ cl.date_hierarchy }}</div>
+        <div></div>
         <div>   
             <div style="font-weight: bold;">{{ summary_line }}</div>
-            {% url 'product_export_excel' as export_url %}
+            {% url 'warehouse_export_excel' as export_url %}
             <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
         </div>
     </div>
