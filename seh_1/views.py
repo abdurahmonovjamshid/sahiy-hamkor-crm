@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
@@ -13,6 +14,7 @@ from .models import (CuttingEvent, Product, ProductProduction,
                      ProductReProduction, SalesEvent, SalesEvent2, Warehouse)
 
 
+@login_required
 def export_excel(request):
     products = Product.objects.all()
 
@@ -59,6 +61,7 @@ def export_excel(request):
     return response
 
 
+@login_required
 def export_warehouse_excel(request):
     queryset = Warehouse.objects.all()
 
@@ -119,6 +122,7 @@ def export_warehouse_excel(request):
     return response
 
 
+@login_required
 def export_production_excel(request):
     queryset = ProductProduction.objects.all()
 
@@ -169,6 +173,7 @@ def export_production_excel(request):
     return response
 
 
+@login_required
 def export_reproduction_excel(request):
     queryset = ProductReProduction.objects.all()
 
