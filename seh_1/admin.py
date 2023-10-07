@@ -139,6 +139,7 @@ class ProductProductionAdmin(admin.ModelAdmin):
     readonly_fields = ('user', 'total_cut', 'total_sold', 'production_date')
     date_hierarchy = 'production_date'
     ordering = ('-production_date',)
+    change_list_template = 'admin/production_change_list.html'
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:

@@ -119,6 +119,56 @@ def export_warehouse_excel(request):
     return response
 
 
+def export_production_excel(request):
+    queryset = ProductProduction.objects.all()
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        queryset = queryset.filter(Q(series=search_query))
+
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+    if filters:
+        queryset = queryset.filter(**filters)
+
+    # Write headers
+    headers = ['Seriya', 'Produkt',
+               'Kesilmaganlar soni', 'Kesilganlar soni', 'sotilganlar soni', 'Xodim', 'Ishlab chiqarilish vaqti']
+    worksheet.append(headers)
+
+    # Write data rows
+    for production in queryset:
+        row = [
+            production.series,
+            str(production.product),
+            production.quantity,
+            production.total_cut,
+            production.total_sold,
+            production.user.username,
+            production.production_date.replace(
+                tzinfo=None),  # Remove timezone information
+        ]
+        worksheet.append(row)
+
+    # Set column width for Arrival Time
+    worksheet.column_dimensions['G'].width = 30
+
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=production.xlsx'
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
+
+
 @receiver(post_save, sender=ProductProduction)
 def subtract_component_total(sender, instance, created, **kwargs):
     if created:

@@ -8,4 +8,6 @@ urlpatterns = [
          name='product_export_excel'),
     path('warehouse/export-excel/', views.export_warehouse_excel,
          name='warehouse_export_excel'),
+    path('production/export-excel/', views.export_production_excel,
+         name='production_export_excel'),
 ]
