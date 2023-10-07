@@ -222,6 +222,8 @@ class ProductReProductionAdmin(admin.ModelAdmin):
     date_hierarchy = 're_production_date'
     readonly_fields = ('user',)
 
+    change_list_template = 'admin/reproduction_change_list.html'
+
     def get_cutting_events(self, obj):
         cutting_events = obj.cutting.all()
         return ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' + cutting_event.product_production.product.name) for cutting_event in cutting_events)
@@ -229,7 +231,7 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 
     def total_cut(self, obj):
         total_cut = 0
-        for cuttingevent in obj .cutting.all():
+        for cuttingevent in obj.cutting.all():
             total_cut += cuttingevent.quantity_cut + cuttingevent.quantity_sold
         return total_cut
 

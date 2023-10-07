@@ -10,4 +10,6 @@ urlpatterns = [
          name='warehouse_export_excel'),
     path('production/export-excel/', views.export_production_excel,
          name='production_export_excel'),
+    path('reproduction/export-excel/', views.export_reproduction_excel,
+         name='reproduction_export_excel'),
 ]

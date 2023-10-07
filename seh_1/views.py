@@ -9,8 +9,8 @@ from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 from pytz import timezone
 
-from .models import (CuttingEvent, Product, ProductProduction, SalesEvent,
-                     SalesEvent2, Warehouse)
+from .models import (CuttingEvent, Product, ProductProduction,
+                     ProductReProduction, SalesEvent, SalesEvent2, Warehouse)
 
 
 def export_excel(request):
@@ -162,6 +162,57 @@ def export_production_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=production.xlsx'
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
+
+
+def export_reproduction_excel(request):
+    queryset = ProductReProduction.objects.all()
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        queryset = queryset.filter(Q(series=search_query))
+
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+    if filters:
+        queryset = queryset.filter(**filters)
+
+    # Write headers
+    headers = ['Xodim', 'Umumiy kesilganlar',
+               'Kesilgan mahsulotlar', 'Kesilgan vaqti']
+    worksheet.append(headers)
+
+    # Write data rows
+    for reproduction in queryset:
+        cutting_events = reproduction.cutting.all()
+        events = ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' +
+                           cutting_event.product_production.product.name) for cutting_event in cutting_events)
+        total_cut = 0
+        for cuttingevent in reproduction.cutting.all():
+            total_cut += cuttingevent.quantity_cut + cuttingevent.quantity_sold
+        row = [
+            reproduction.user.username,
+            total_cut,
+            events,
+            reproduction.re_production_date.replace(
+                tzinfo=None),  # Remove timezone information
+        ]
+        worksheet.append(row)
+
+    worksheet.column_dimensions['D'].width = 20
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=reproduction.xlsx'
 
     # Save workbook to response
     workbook.save(response)
