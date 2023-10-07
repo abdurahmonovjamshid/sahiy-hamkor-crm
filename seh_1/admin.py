@@ -184,7 +184,7 @@ class WarehouseAdmin(admin.ModelAdmin):
     def get_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.price)
         return formatted_price
-        
+
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
 
@@ -216,12 +216,15 @@ class ProductReProductionAdmin(admin.ModelAdmin):
     inlines = [CuttingEventInline]
     list_display = ['user', 'total_cut',
                     'get_cutting_events', 're_production_date']
-    search_fields = ['product_reproduction']
+    search_fields = ['user__username']
+    list_filter = ['user', 're_production_date']
+    date_hierarchy = 're_production_date'
     readonly_fields = ('user',)
 
     def get_cutting_events(self, obj):
         cutting_events = obj.cutting.all()
         return ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' + cutting_event.product_production.product.name) for cutting_event in cutting_events)
+    get_cutting_events.short_description = 'Kesilgan  mahsulotlar'
 
     def total_cut(self, obj):
         total_cut = 0
@@ -270,7 +273,9 @@ class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
     list_display = ['buyer', 'seller',
                     'get_sales_events', 'get_sales_event2s', 'get_total_price', 'date']
-    search_fields = ['buyer']
+    list_filter = ['buyer', 'seller', 'date']
+    search_fields = ['buyer', 'seller__username']
+    date_hierarchy = 'date'
     # readonly_fields = ('seller',)
     exclude = ('seller',)
 
@@ -296,13 +301,13 @@ class SalesAdmin(admin.ModelAdmin):
 
     def get_sales_events(self, obj):
         sales_events = obj.selling_cut.all()
-        return ", ".join(str(sale_event) for sale_event in sales_events)
+        return ", ".join(str(sale_event)+f' ({sale_event.single_sold_price} dan)' for sale_event in sales_events)
 
     get_sales_events.short_description = 'Kesilgan mahsulotlar'
 
     def get_sales_event2s(self, obj):
         sales_event2s = obj.selling.all()
-        return ", ".join(str(sale_event2) for sale_event2 in sales_event2s)
+        return ", ".join(str(sale_event2)+f' ({sale_event2.single_sold_price} dan)' for sale_event2 in sales_event2s)
 
     get_sales_event2s.short_description = 'Kesilmagan mahsulotlar'
 

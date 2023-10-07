@@ -158,7 +158,8 @@ class Warehouse(models.Model):
 class ProductReProduction(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True)
-    re_production_date = models.DateTimeField(auto_now_add=True)
+    re_production_date = models.DateTimeField(
+        auto_now_add=True, verbose_name='Kesilgan vaqti')
 
     def __str__(self):
         formatted_date = self.re_production_date.strftime('%B %Y, %H:%M')
@@ -171,7 +172,7 @@ class ProductReProduction(models.Model):
 
 class CuttingEvent(models.Model):
     product_production = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut': 0}, verbose_name='Tovar')
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut': 0, 'total_sold': 0}, verbose_name='Tovar')
     quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
@@ -199,7 +200,7 @@ class Sales(models.Model):
     buyer = models.CharField(max_length=250, verbose_name='Haridor')
     seller = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Sotuvchi')
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True, verbose_name='Sotilgan sana')
 
     class Meta:
         verbose_name = 'Sotuv '
