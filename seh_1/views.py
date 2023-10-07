@@ -184,7 +184,7 @@ def export_reproduction_excel(request):
 
     search_query = request.GET.get('q')
     if search_query:
-        queryset = queryset.filter(Q(series=search_query))
+        queryset = queryset.filter(Q(user__username=search_query))
 
     filters = request.GET.dict()
     filters.pop('q', None)
