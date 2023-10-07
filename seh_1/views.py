@@ -237,7 +237,7 @@ def export_sales_excel(request):
     search_query = request.GET.get('q')
     if search_query:
         queryset = queryset.filter(
-            Q(buyer=search_query) | Q(seller=search_query))
+            Q(buyer__icontains=search_query) | Q(seller__icontains=search_query))
 
     filters = request.GET.dict()
     filters.pop('q', None)
