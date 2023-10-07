@@ -1,14 +1,18 @@
 from datetime import datetime
 
+import requests
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.http import HttpResponse
+from django.urls import reverse
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 from pytz import timezone
+
+from conf import settings
 
 from .models import (CuttingEvent, Product, ProductProduction,
                      ProductReProduction, Sales, SalesEvent, SalesEvent2,
@@ -307,6 +311,30 @@ def subtract_component_total(sender, instance, created, **kwargs):
             component = product_component.component
             component.total -= total_quantity_by_component
             component.save()
+
+            try:
+                for tg_id in settings.ADMINS:
+                    if component.total <= component.notification_limit:
+                        message_text = f'{component.title} limitdan kamayib ketdi!'
+                        url = f'https://api.telegram.org/bot{settings.TOKEN}/sendMessage'
+
+                        inline_keyboard = [[{
+                            'text': 'Ko\'rish',
+                            'url': f'{settings.HOSTNAME}'+reverse('admin:seh_1_component_changelist')
+                        }]]
+
+                        message = {
+                            'chat_id': tg_id,
+                            'text': message_text,
+                            'reply_markup': {
+                                'inline_keyboard': inline_keyboard
+                            }
+                        }
+
+                        response = requests.post(url, json=message)
+                        print(response.text)
+            except Exception as e:
+                print(e)
 
 
 @receiver(post_delete, sender=ProductProduction)

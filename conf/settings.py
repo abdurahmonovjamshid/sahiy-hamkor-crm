@@ -13,6 +13,16 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from environs import Env
+
+env = Env()
+env.read_env()
+
+TOKEN = env.str('TOKEN')
+ADMINS = env.list('ADMINS')
+HOSTNAME = env.str('HOSTNAME')
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
