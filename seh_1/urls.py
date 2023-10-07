@@ -12,4 +12,6 @@ urlpatterns = [
          name='production_export_excel'),
     path('reproduction/export-excel/', views.export_reproduction_excel,
          name='reproduction_export_excel'),
+    path('sales/export-excel/', views.export_sales_excel,
+         name='sales_export_excel'),
 ]

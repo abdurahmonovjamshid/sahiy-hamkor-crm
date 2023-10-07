@@ -11,7 +11,8 @@ from openpyxl.utils import get_column_letter
 from pytz import timezone
 
 from .models import (CuttingEvent, Product, ProductProduction,
-                     ProductReProduction, SalesEvent, SalesEvent2, Warehouse)
+                     ProductReProduction, Sales, SalesEvent, SalesEvent2,
+                     Warehouse)
 
 
 @login_required
@@ -218,6 +219,73 @@ def export_reproduction_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=reproduction.xlsx'
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
+
+
+@login_required
+def export_sales_excel(request):
+    queryset = Sales.objects.all()
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        queryset = queryset.filter(
+            Q(buyer=search_query) | Q(seller=search_query))
+
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+    if filters:
+        queryset = queryset.filter(**filters)
+
+    # Write headers
+    headers = ['Haridor', 'Sotuvchi',
+               'Kesilgan mahsulotlar', 'Kesilmagan mahsulotlar', 'Narx', 'Xodim', 'Sotilgan sana']
+    worksheet.append(headers)
+
+    # Write data rows
+    for sale in queryset:
+        sales_events = sale.selling_cut.all()
+        cuts = ", ".join(str(
+            sale_event)+f' ({sale_event.single_sold_price} dan)' for sale_event in sales_events)
+
+        sales_event2s = sale.selling.all()
+        non_cuts = ", ".join(str(
+            sale_event2)+f' ({sale_event2.single_sold_price} dan)' for sale_event2 in sales_event2s)
+
+        sales_events = sale.selling_cut.all()
+        total_price = sum(event.total_sold_price for event in sales_events)
+
+        sales_events2 = sale.selling.all()
+        total_price2 = sum(event.total_sold_price for event in sales_events2)
+        formatted_price = "{:,.1f}".format(total_price + total_price2)
+
+        row = [
+            sale.buyer,
+            sale.seller,
+            cuts,
+            non_cuts,
+            formatted_price,
+            sale.user.username if sale.user else '-',
+            sale.date.replace(
+                tzinfo=None),  # Remove timezone information
+        ]
+        worksheet.append(row)
+
+    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['C'].width = 50
+    worksheet.column_dimensions['D'].width = 50
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=sales.xlsx'
 
     # Save workbook to response
     workbook.save(response)

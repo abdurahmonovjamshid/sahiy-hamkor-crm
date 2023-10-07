@@ -275,12 +275,14 @@ class SalesEventInline2(admin.TabularInline):
 class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
     list_display = ['buyer', 'seller',
-                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'date']
-    list_filter = ['buyer', 'seller', 'date']
-    search_fields = ['buyer', 'seller__username']
+                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'user', 'date']
+    list_filter = ['buyer', 'seller', 'user', 'date']
+    search_fields = ['buyer', 'seller']
     date_hierarchy = 'date'
     # readonly_fields = ('seller',)
-    exclude = ('seller',)
+    exclude = ('user',)
+
+    change_list_template = 'admin/sales_change_list.html'
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -316,7 +318,7 @@ class SalesAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         # Set the current logged-in user as the seller
-        obj.seller = request.user
+        obj.user = request.user
         obj.save()
 
     def has_change_permission(self, request, obj=None):

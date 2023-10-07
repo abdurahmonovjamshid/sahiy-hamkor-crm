@@ -157,7 +157,7 @@ class Warehouse(models.Model):
 
 class ProductReProduction(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Xodim')
     re_production_date = models.DateTimeField(
         auto_now_add=True, verbose_name='Kesilgan vaqti')
 
@@ -198,9 +198,11 @@ class CuttingEvent(models.Model):
 
 class Sales(models.Model):
     buyer = models.CharField(max_length=250, verbose_name='Haridor')
-    seller = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Sotuvchi')
-    date = models.DateTimeField(auto_now_add=True, verbose_name='Sotilgan sana')
+    seller = models.CharField(max_length=250, verbose_name='Sotuvchi')
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Xodim')
+    date = models.DateTimeField(
+        auto_now_add=True, verbose_name='Sotilgan sana')
 
     class Meta:
         verbose_name = 'Sotuv '
