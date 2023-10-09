@@ -21,10 +21,11 @@ class Component(MPTTModel):
                                related_name='children', null=True, blank=True, )
 
     title = models.CharField(max_length=100, verbose_name='Nomi')
+    price = models.FloatField(verbose_name='Narx')
     measurement = models.CharField(
         max_length=2, choices=MEASUREMENT_CHOICES, verbose_name="O'lchov birligi")
 
-    total = models.FloatField(default=0, verbose_name='umumiy')
+    total = models.FloatField(default=0, verbose_name='Umumiy')
     notification_limit = models.IntegerField(
         default=500, verbose_name="Ogohlantirish")
 
@@ -49,6 +50,7 @@ class Component(MPTTModel):
 
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nomi')
+    price = models.FloatField(verbose_name='Sotuv narxi')
 
     total_new = models.IntegerField(
         default=0, verbose_name="Kesilmaganlar soni")

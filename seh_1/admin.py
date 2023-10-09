@@ -70,10 +70,23 @@ admin.site.register(User, CustomUserAdmin)
 class ComponentAdmin(DraggableMPTTAdmin):
     mptt_indent_field = "title"
     list_display = ('tree_actions', 'indented_title',
-                    'highlight_total', 'measurement')
+                    'highlight_total', 'get_price', 'get_total_price', 'measurement')
     list_filter = ('parent',)
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
+
+    def get_total_price(self, obj):
+        if not obj.parent:
+            return '-'
+        return obj.total * obj.price
+    get_total_price.short_description = 'Umumiy narx'
+
+    def get_price(self, obj):
+        if not obj.parent:
+            return '-'
+        return obj.price
+    get_price.short_description = 'Narxi'
+    get_price.admin_order_field = 'price'
 
     def highlight_total(self, obj):
         if obj.parent:
@@ -103,19 +116,51 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
     list_filter = ['name']
     search_fields = ('name',)
-    list_display = ('name', 'total_new', 'total_cut',
-                    'total_sold', 'get_total_sold_price')
+    list_display = ('name', 'tannarx', 'get_price', 'total_new', 'total_cut',
+                    'total_sold', 'non_sold_price', 'get_total_sold_price')
 
     fieldsets = (
         ('Umumiy malumot', {
-            'fields': ('name', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
+            'fields': ('name', 'price', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
         }),
     )
 
+    def get_price(self, obj):
+        return str(obj.price)+'$'
+    get_price.short_description = 'Sotuv narxi'
+    get_price.admin_order_field = 'price'
+
+    def non_sold_price(self, obj):
+        formatted_price = "{:,.1f}".format(
+            (obj.total_new + obj.total_cut)*obj.price)
+        return formatted_price+'$'
+    non_sold_price.short_description = 'Mavjud tovar narxi'
+    non_sold_price.admin_order_field = 'non_sold_price'
+
+    def tannarx(self, obj):
+        product_price = 0
+        for productcomponent in obj.productcomponent_set.all():
+            product_price += productcomponent.quantity*productcomponent.component.price
+        return "{:,.1f}".format(product_price)+'$'
+    tannarx.short_description = 'Tan narxi'
+    tannarx.admin_order_field = 'single_product_price'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            single_product_price=Sum(
+                F('productcomponent__quantity') * F('productcomponent__component__price'))
+        )
+        queryset = queryset.annotate(
+            non_sold_price=Sum(
+                F('price') * (F('total_new')+F('total_cut')))
+        )
+        return queryset
+
     def get_total_sold_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.total_sold_price)
-        return formatted_price
-    get_total_sold_price.short_description = "Umumiy sotilgan narxi"
+        return formatted_price+'$'
+    get_total_sold_price.short_description = "Sotilgan tovar narxi"
     get_total_sold_price.admin_order_field = 'total_sold_price'
 
     change_list_template = 'admin/product_change_list.html'
@@ -128,7 +173,7 @@ class ProductAdmin(admin.ModelAdmin):
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
-        response.context_data['summary_line'] = f"Kassa: {formatted_price}"
+        response.context_data['summary_line'] = f"Kassa: {formatted_price}$"
         return response
 
 
@@ -184,7 +229,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 
     def get_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.price)
-        return formatted_price
+        return formatted_price+'$'
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -299,7 +344,7 @@ class SalesAdmin(admin.ModelAdmin):
         sales_events2 = obj.selling.all()
         total_price2 = sum(event.total_sold_price for event in sales_events2)
         formatted_price = "{:,.1f}".format(total_price + total_price2)
-        return formatted_price
+        return formatted_price+'$'
 
     get_total_price.short_description = 'Narx'
     get_total_price.admin_order_field = 'total_price'
