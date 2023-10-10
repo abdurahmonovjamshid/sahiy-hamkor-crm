@@ -79,7 +79,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
         if not obj.parent:
             return '-'
         return obj.total * obj.price
-    get_total_price.short_description = 'Umumiy narx'
+    get_total_price.short_description = 'Mavjud komponent narxi'
 
     def get_price(self, obj):
         if not obj.parent:
@@ -173,7 +173,12 @@ class ProductAdmin(admin.ModelAdmin):
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
-        response.context_data['summary_line'] = f"Kassa: {formatted_price}$"
+        total_product_price = queryset.aggregate(total_product_price=Sum((F('total_new') + F('total_cut'))*F('price')))[
+            'total_product_price'] or 0
+        formatted_pr_price = "{:,.1f}".format(total_product_price)
+
+        response.context_data[
+            'summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price}$<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price}$"
         return response
 
 
