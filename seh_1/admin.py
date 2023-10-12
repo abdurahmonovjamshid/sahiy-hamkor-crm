@@ -78,13 +78,16 @@ class ComponentAdmin(DraggableMPTTAdmin):
     def get_total_price(self, obj):
         if not obj.parent:
             return '-'
-        return obj.total * obj.price
+        formatted_price = "{:,.1f}".format(obj.total * obj.price)
+        return formatted_price+'$'
+
     get_total_price.short_description = 'Mavjud komponent narxi'
 
     def get_price(self, obj):
         if not obj.parent:
             return '-'
-        return obj.price
+        formatted_price = "{:,.1f}".format(obj.price)
+        return formatted_price+'$'
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
 
@@ -93,9 +96,9 @@ class ComponentAdmin(DraggableMPTTAdmin):
             if obj.total < obj.notification_limit:  # Specify your desired threshold value here
                 return format_html(
                     '<span style="background-color:#FF0E0E; color:white; padding: 2px 5px;">{}</span>',
-                    obj.total
+                    str(obj.total)+' '+obj.measurement
                 )
-            return obj.total
+            return str(obj.total)+' '+obj.measurement
         elif not obj.parent and obj.highlight:
             return format_html('<span style="background-color:#FF0E0E; color:white; padding: 2px 10px;">-</span>')
 
@@ -356,13 +359,13 @@ class SalesAdmin(admin.ModelAdmin):
 
     def get_sales_events(self, obj):
         sales_events = obj.selling_cut.all()
-        return ", ".join(str(sale_event)+f' ({sale_event.single_sold_price} dan)' for sale_event in sales_events)
+        return ", ".join(str(sale_event)+f' ({sale_event.single_sold_price}$ dan)' for sale_event in sales_events)
 
     get_sales_events.short_description = 'Kesilgan mahsulotlar'
 
-    def get_sales_event2s(self, obj):
+    def get_sales_event2s(self, obj):   
         sales_event2s = obj.selling.all()
-        return ", ".join(str(sale_event2)+f' ({sale_event2.single_sold_price} dan)' for sale_event2 in sales_event2s)
+        return ", ".join(str(sale_event2)+f' ({sale_event2.single_sold_price}$ dan)' for sale_event2 in sales_event2s)
 
     get_sales_event2s.short_description = 'Kesilmagan mahsulotlar'
 
