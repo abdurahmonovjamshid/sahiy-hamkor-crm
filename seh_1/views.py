@@ -40,17 +40,26 @@ def export_excel(request):
         products = products.filter(**filters)
 
     # Write headers
-    headers = ['Nomi', 'Kesilmaganlar soni', 'Kesilganlar soni',
-               'Sotilganlar soni', 'Umumiy sotilgan narxi']
+    headers = ['Nomi', 'Tan narxi', 'Sotuv narxi', 'Kesilmaganlar soni', 'Kesilganlar soni',
+               'Sotilganlar soni', 'Mavjud tovar narxi', 'Sotilgan tovar narxi']
     worksheet.append(headers)
 
     # Write data rows
     for product in products:
+        product_price = 0
+        for productcomponent in product.productcomponent_set.all():
+            product_price += productcomponent.quantity*productcomponent.component.price
+        product_price = "{:,.1f}".format(product_price)+'$'
+
         row = [
             product.name,
+            product_price,
+            str(product.price)+'$',
             product.total_new,
             product.total_cut,
             product.total_sold,
+            "{:,.1f}".format(
+                (product.total_new + product.total_cut)*product.price),
             "{:,.1f}".format(product.total_sold_price)
         ]
         worksheet.append(row)
@@ -59,6 +68,15 @@ def export_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=products.xlsx'
+
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
+    worksheet.column_dimensions['C'].width = 20
+    worksheet.column_dimensions['D'].width = 20
+    worksheet.column_dimensions['E'].width = 20
+    worksheet.column_dimensions['F'].width = 20
+    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['H'].width = 20
 
     # Save workbook to response
     workbook.save(response)
@@ -114,7 +132,14 @@ def export_warehouse_excel(request):
         worksheet.column_dimensions[column_letter].alignment = alignment
 
     # Set column width for Arrival Time
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
+    worksheet.column_dimensions['C'].width = 20
     worksheet.column_dimensions['D'].width = 20
+    worksheet.column_dimensions['E'].width = 20
+    worksheet.column_dimensions['F'].width = 20
+    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['H'].width = 20
 
     # Set the response headers for file download
     response = HttpResponse(
@@ -165,7 +190,14 @@ def export_production_excel(request):
         worksheet.append(row)
 
     # Set column width for Arrival Time
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
+    worksheet.column_dimensions['C'].width = 20
+    worksheet.column_dimensions['D'].width = 20
+    worksheet.column_dimensions['E'].width = 20
+    worksheet.column_dimensions['F'].width = 20
     worksheet.column_dimensions['G'].width = 30
+    worksheet.column_dimensions['H'].width = 20
 
     # Set the response headers for file download
     response = HttpResponse(
@@ -218,7 +250,14 @@ def export_reproduction_excel(request):
         ]
         worksheet.append(row)
 
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
+    worksheet.column_dimensions['C'].width = 50
     worksheet.column_dimensions['D'].width = 20
+    worksheet.column_dimensions['E'].width = 20
+    worksheet.column_dimensions['F'].width = 20
+    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['H'].width = 20
     # Set the response headers for file download
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -283,9 +322,14 @@ def export_sales_excel(request):
         ]
         worksheet.append(row)
 
-    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
     worksheet.column_dimensions['C'].width = 50
     worksheet.column_dimensions['D'].width = 50
+    worksheet.column_dimensions['E'].width = 20
+    worksheet.column_dimensions['F'].width = 20
+    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['H'].width = 20
     # Set the response headers for file download
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
