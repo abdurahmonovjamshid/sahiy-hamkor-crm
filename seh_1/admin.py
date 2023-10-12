@@ -180,8 +180,11 @@ class ProductAdmin(admin.ModelAdmin):
             'total_product_price'] or 0
         formatted_pr_price = "{:,.1f}".format(total_product_price)
 
-        response.context_data[
-            'summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price}$<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price}$"
+        try:
+            response.context_data[
+                'summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price}$<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price}$"
+        except:
+            pass
         return response
 
 
@@ -232,7 +235,10 @@ class WarehouseAdmin(admin.ModelAdmin):
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
-        response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
+        try:
+            response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
+        except:
+            pass
         return response
 
     def get_price(self, obj):
@@ -363,7 +369,7 @@ class SalesAdmin(admin.ModelAdmin):
 
     get_sales_events.short_description = 'Kesilgan mahsulotlar'
 
-    def get_sales_event2s(self, obj):   
+    def get_sales_event2s(self, obj):
         sales_event2s = obj.selling.all()
         return ", ".join(str(sale_event2)+f' ({sale_event2.single_sold_price}$ dan)' for sale_event2 in sales_event2s)
 
