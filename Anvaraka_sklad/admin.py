@@ -18,7 +18,7 @@ class ProductAdmin(DraggableMPTTAdmin):
         if not obj.parent:
             return '-'
         formatted_price = "{:,.1f}".format(obj.total * obj.price)
-        return formatted_price+'$'
+        return formatted_price+' '+obj.currency
 
     get_total_price.short_description = 'Mavjud komponent narxi'
 
@@ -26,7 +26,7 @@ class ProductAdmin(DraggableMPTTAdmin):
         if not obj.parent:
             return '-'
         formatted_price = "{:,.1f}".format(obj.price)
-        return formatted_price+'$'
+        return formatted_price+' '+obj.currency
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
 
@@ -53,7 +53,7 @@ class WarehouseAdmin(admin.ModelAdmin):
     exclude = ('user', )
     readonly_fields = ('price', 'total_price')
 
-    change_list_template = 'admin/warehouse_change_list.html'
+    # change_list_template = 'admin/warehouse_change_list.html'
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -71,7 +71,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 
     def get_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.total_price)
-        return formatted_price+'$'
+        return formatted_price+' '+obj.component.currency
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -100,7 +100,7 @@ class SalesAdmin(admin.ModelAdmin):
     exclude = ('user', )
     readonly_fields = ('price', 'total_price')
 
-    change_list_template = 'admin/warehouse_change_list.html'
+    # change_list_template = 'admin/warehouse_change_list.html'
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -118,7 +118,7 @@ class SalesAdmin(admin.ModelAdmin):
 
     def get_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.total_price)
-        return formatted_price+'$'
+        return formatted_price+' '+obj.component.currency
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -142,4 +142,3 @@ class SalesAdmin(admin.ModelAdmin):
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Warehouse, WarehouseAdmin)
 admin.site.register(Sales, SalesAdmin)
-

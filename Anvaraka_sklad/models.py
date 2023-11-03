@@ -12,6 +12,11 @@ class Product(MPTTModel):
         ('ta', 'Dona'),
     ]
 
+    CURRENCY_CHOICES = [
+        ('sum', 'So\'m'),
+        ('$', 'USD')
+    ]
+
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, verbose_name="Bo'limlar",
                                limit_choices_to={'parent__isnull': True},
                                related_name='children', null=True, blank=True, )
@@ -19,6 +24,9 @@ class Product(MPTTModel):
     title = models.CharField(max_length=100, verbose_name='Nomi')
     price = models.FloatField(verbose_name='Narxi')
     sell_price = models.FloatField(verbose_name='Sotuv narxi')
+    currency = models.CharField(
+        max_length=3, choices=CURRENCY_CHOICES, verbose_name="Valyuta birligi", default='$')
+
     measurement = models.CharField(
         max_length=2, choices=MEASUREMENT_CHOICES, verbose_name="O'lchov birligi")
 
@@ -48,7 +56,7 @@ class Product(MPTTModel):
 class Warehouse(models.Model):
     component = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Keltirilgan mahsulot ', limit_choices_to={'parent__isnull': False})
-    quantity = models.IntegerField(verbose_name="Miqdor")
+    quantity = models.FloatField(verbose_name="Miqdor")
     price = models.FloatField(default=0, verbose_name='Narxi')
     total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
     arrival_time = models.DateTimeField(
@@ -73,7 +81,8 @@ class Warehouse(models.Model):
 class Sales(models.Model):
     component = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Sotilgan mahsulot ', limit_choices_to={'parent__isnull': False})
-    quantity = models.IntegerField(verbose_name="Miqdor")
+    buyer = models.CharField(max_length=100, verbose_name='Xaridor')
+    quantity = models.FloatField(verbose_name="Miqdor")
     price = models.FloatField(default=0, verbose_name='Narxi')
     total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
     sold_time = models.DateTimeField(
