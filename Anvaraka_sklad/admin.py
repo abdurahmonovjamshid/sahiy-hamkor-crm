@@ -93,7 +93,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 
 
 class SalesAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'get_price', 'user', 'sold_time')
+    list_display = ('__str__', 'buyer', 'get_price', 'user', 'sold_time')
     list_filter = ('sold_time', 'component')
     date_hierarchy = 'sold_time'
     ordering = ('-sold_time',)
