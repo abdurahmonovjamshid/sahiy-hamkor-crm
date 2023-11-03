@@ -12,12 +12,34 @@ class ProductAdmin(DraggableMPTTAdmin):
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
 
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'parent', 'price', 'sell_price', 'currency', 'measurement', 'total', 'notification_limit')
+        }),
+    )
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if not request.user.is_superuser:
+            price_fields = ('price', 'sell_price', 'currency')
+            fieldsets[0][1]['fields'] = tuple(
+                field for field in fieldsets[0][1]['fields'] if field not in price_fields)
+        return fieldsets
+
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('tree_actions', 'indented_title',
-                    'highlight_total', 'get_price', 'get_total_price', 'measurement')
+                    'highlight_total', 'get_price', 'get_sell_price', 'get_total_price', 'get_total_sell_price', 'get_benefit', 'measurement')
         else:
             return ('tree_actions', 'indented_title', 'highlight_total', 'measurement')
+
+    def get_benefit(self, obj):
+        if not obj.parent:
+            return '-'
+        formatted_price = "{:,.1f}".format(
+            obj.total * (obj.sell_price-obj.price))
+        return formatted_price+' '+obj.currency
+    get_benefit.short_description = 'Foyda'
 
     def get_total_price(self, obj):
         if not obj.parent:
@@ -25,15 +47,33 @@ class ProductAdmin(DraggableMPTTAdmin):
         formatted_price = "{:,.1f}".format(obj.total * obj.price)
         return formatted_price+' '+obj.currency
 
-    get_total_price.short_description = 'Mavjud komponent narxi'
+    get_total_price.short_description = 'Umumiy narxi'
+
+    def get_total_sell_price(self, obj):
+        if not obj.parent:
+            return '-'
+        formatted_price = "{:,.1f}".format(obj.total * obj.sell_price)
+        return formatted_price+' '+obj.currency
+
+    get_total_sell_price.short_description = 'Umumiy sotuv narxi'
 
     def get_price(self, obj):
         if not obj.parent:
             return '-'
         formatted_price = "{:,.1f}".format(obj.price)
         return formatted_price+' '+obj.currency
+
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
+
+    def get_sell_price(self, obj):
+        if not obj.parent:
+            return '-'
+        formatted_price = "{:,.1f}".format(obj.sell_price)
+        return formatted_price+' '+obj.currency
+
+    get_sell_price.short_description = 'Sotuv Narxi'
+    get_sell_price.admin_order_field = 'sell_price'
 
     def highlight_total(self, obj):
         if obj.parent:
