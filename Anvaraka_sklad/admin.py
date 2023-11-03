@@ -17,7 +17,7 @@ class ProductAdmin(DraggableMPTTAdmin):
             return ('tree_actions', 'indented_title',
                     'highlight_total', 'get_price', 'get_total_price', 'measurement')
         else:
-            return ('tree_actions', 'indented_title', 'measurement')
+            return ('tree_actions', 'indented_title', 'highlight_total', 'measurement')
 
     def get_total_price(self, obj):
         if not obj.parent:
