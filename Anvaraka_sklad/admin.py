@@ -15,18 +15,22 @@ class ProductAdmin(DraggableMPTTAdmin):
     search_fields = ('title',)
 
     def get_total_price(self, obj):
-        if not obj.parent:
-            return '-'
-        formatted_price = "{:,.1f}".format(obj.total * obj.price)
-        return formatted_price+' '+obj.currency
+        if self.request.user.is_superuser:
+            if not obj.parent:
+                return '-'
+            formatted_price = "{:,.1f}".format(obj.total * obj.price)
+            return formatted_price+' '+obj.currency
+        return '-'
 
     get_total_price.short_description = 'Mavjud komponent narxi'
 
     def get_price(self, obj):
-        if not obj.parent:
-            return '-'
-        formatted_price = "{:,.1f}".format(obj.price)
-        return formatted_price+' '+obj.currency
+        if self.request.user.is_superuser:
+            if not obj.parent:
+                return '-'
+            formatted_price = "{:,.1f}".format(obj.price)
+            return formatted_price+' '+obj.currency
+        return '-'
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
 
@@ -46,18 +50,14 @@ class ProductAdmin(DraggableMPTTAdmin):
 
 
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'arrival_time')
+    list_display = ('__str__', 'get_price', 'user', 'arrival_time')
     list_filter = ('arrival_time', 'component')
     date_hierarchy = 'arrival_time'
     ordering = ('-arrival_time',)
     exclude = ('user', )
-    readonly_fields = ('total_price',)
+    readonly_fields = ('price', 'total_price')
 
-    def get_list_display(self, request):
-        list_display = super().get_list_display(request)
-        if request.user.is_superuser:
-            list_display += ('get_price',)
-        return list_display
+    # change_list_template = 'admin/warehouse_change_list.html'
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -74,11 +74,13 @@ class WarehouseAdmin(admin.ModelAdmin):
         return response
 
     def get_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.total_price)
-        return formatted_price+' '+obj.component.currency
+        if self.request.user.is_superuser:
+            formatted_price = "{:,.1f}".format(obj.total_price)
+            return formatted_price+' '+obj.component.currency
+        return '-'
 
     get_price.short_description = 'Narxi'
-    get_price.admin_order_field = 'total_price'
+    get_price.admin_order_field = 'price'
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:
@@ -121,8 +123,10 @@ class SalesAdmin(admin.ModelAdmin):
         return response
 
     def get_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.total_price)
-        return formatted_price+' '+obj.component.currency
+        if self.request.user.is_superuser:
+            formatted_price = "{:,.1f}".format(obj.total_price)
+            return formatted_price+' '+obj.component.currency
+        return '-'
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
