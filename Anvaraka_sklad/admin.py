@@ -8,29 +8,30 @@ from .models import Product, Warehouse, Sales
 
 class ProductAdmin(DraggableMPTTAdmin):
     mptt_indent_field = "title"
-    list_display = ('tree_actions', 'indented_title',
-                    'highlight_total', 'get_price', 'get_total_price', 'measurement')
     list_filter = ('parent',)
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
 
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('tree_actions', 'indented_title',
+                    'highlight_total', 'get_price', 'get_total_price', 'measurement')
+        else:
+            return ('tree_actions', 'indented_title', 'measurement')
+
     def get_total_price(self, obj):
-        if self.request.user.is_superuser:
-            if not obj.parent:
-                return '-'
-            formatted_price = "{:,.1f}".format(obj.total * obj.price)
-            return formatted_price+' '+obj.currency
-        return '-'
+        if not obj.parent:
+            return '-'
+        formatted_price = "{:,.1f}".format(obj.total * obj.price)
+        return formatted_price+' '+obj.currency
 
     get_total_price.short_description = 'Mavjud komponent narxi'
 
     def get_price(self, obj):
-        if self.request.user.is_superuser:
-            if not obj.parent:
-                return '-'
-            formatted_price = "{:,.1f}".format(obj.price)
-            return formatted_price+' '+obj.currency
-        return '-'
+        if not obj.parent:
+            return '-'
+        formatted_price = "{:,.1f}".format(obj.price)
+        return formatted_price+' '+obj.currency
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
 
@@ -50,14 +51,17 @@ class ProductAdmin(DraggableMPTTAdmin):
 
 
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'get_price', 'user', 'arrival_time')
     list_filter = ('arrival_time', 'component')
     date_hierarchy = 'arrival_time'
     ordering = ('-arrival_time',)
-    exclude = ('user', )
-    readonly_fields = ('price', 'total_price')
+    exclude = ('user', 'price', 'total_price')
 
     # change_list_template = 'admin/warehouse_change_list.html'
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('__str__', 'get_price', 'user', 'arrival_time')
+        else:
+            return ('__str__', 'user', 'arrival_time')
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -74,10 +78,8 @@ class WarehouseAdmin(admin.ModelAdmin):
         return response
 
     def get_price(self, obj):
-        if self.request.user.is_superuser:
-            formatted_price = "{:,.1f}".format(obj.total_price)
-            return formatted_price+' '+obj.component.currency
-        return '-'
+        formatted_price = "{:,.1f}".format(obj.total_price)
+        return formatted_price+' '+obj.component.currency
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -103,10 +105,15 @@ class SalesAdmin(admin.ModelAdmin):
     list_filter = ('sold_time', 'component')
     date_hierarchy = 'sold_time'
     ordering = ('-sold_time',)
-    exclude = ('user', )
-    readonly_fields = ('price', 'total_price')
+    exclude = ('user', 'price', 'total_price')
 
     # change_list_template = 'admin/warehouse_change_list.html'
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('__str__', 'buyer', 'get_price', 'user', 'sold_time')
+        else:
+            return ('__str__', 'buyer', 'user', 'sold_time')
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -123,10 +130,8 @@ class SalesAdmin(admin.ModelAdmin):
         return response
 
     def get_price(self, obj):
-        if self.request.user.is_superuser:
-            formatted_price = "{:,.1f}".format(obj.total_price)
-            return formatted_price+' '+obj.component.currency
-        return '-'
+        formatted_price = "{:,.1f}".format(obj.total_price)
+        return formatted_price+' '+obj.component.currency
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
