@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div></div>
+        <div>   
+            <div style="font-weight: bold;">{{ summary_line }}</div>
+            {% url 'production_export_excel' as export_url %}
+            <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
+        </div>
+    </div>
+    {{ block.super }}
+{% endblock %}

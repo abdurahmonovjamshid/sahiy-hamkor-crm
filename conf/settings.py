@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mptt',
-    'seh_1'
+    'seh_1',
+    'Anvaraka_sklad'
 ]
 
 LOGIN_URL = '/admin/login/'
@@ -143,9 +144,11 @@ JAZZMIN_SETTINGS = {
             "new_window": True},
         {"model": "auth.User"},
         {"app": "seh_1"},
+        {"app": "Anvaraka_sklad"},
+
     ],
     "show_sidebar": True,
-    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse", 'seh_1.productreproduction'],
+    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse", 'seh_1.productreproduction', "Anvaraka_sklad.product", "Anvaraka_sklad.warehouse", "Anvaraka_sklad.sales",],
 
     "icons": {
         "auth": "fas fa-users-cog",
@@ -157,6 +160,10 @@ JAZZMIN_SETTINGS = {
         "seh_1.warehouse": "fas fa-warehouse",
         "seh_1.productreproduction": "fas fa-cut",
         "seh_1.sales": "fas fa-shopping-cart",
+
+        "Anvaraka_sklad.product": "fas fa-cubes",
+        "Anvaraka_sklad.warehouse": "fas fa-warehouse",
+        "Anvaraka_sklad.sales": "fas fa-shopping-cart",
     },
 }
 
