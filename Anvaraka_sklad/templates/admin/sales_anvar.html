@@ -4,10 +4,19 @@
     <div style="display: flex; justify-content: space-between; align-items: baseline;">
         <div></div>
         <div>   
-            <div style="font-weight: bold;">{{ summary_line }}</div>
             {% url 'sales_export_excel' as export_url %}
             <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
         </div>
     </div>
+    {% if currency_totals %}
+        <div>
+            <h3>Umumiy narxlar:</h3>
+            <ul>
+            {% for currency, total_price in currency_totals.items %}
+                <li>{{ currency }}: {{ total_price }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
     {{ block.super }}
 {% endblock %}

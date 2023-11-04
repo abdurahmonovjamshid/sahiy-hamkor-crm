@@ -96,7 +96,8 @@ class WarehouseAdmin(admin.ModelAdmin):
     ordering = ('-arrival_time',)
     exclude = ('user', 'price', 'total_price')
 
-    # change_list_template = 'admin/warehouse_change_list.html'
+    change_list_template = 'admin/warehouse_anvar.html'
+
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('__str__', 'get_price', 'user', 'arrival_time')
@@ -107,14 +108,30 @@ class WarehouseAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price=Sum('total_price'))[
-            'total_price'] or 0
-        formatted_price = "{:,.1f}".format(total_price)
+
+        # Calculate total prices for each currency
+        currency_totals = queryset.values('component__currency').annotate(
+            total_price=Sum('total_price'))
+
+        # Create a dictionary to store the formatted currency totals
+        formatted_currency_totals = {}
+        for currency_total in currency_totals:
+            currency = currency_total['component__currency']
+            total_price = currency_total['total_price'] or Decimal('0')
+            if currency in formatted_currency_totals:
+                formatted_currency_totals[currency] += total_price
+            else:
+                formatted_currency_totals[currency] = total_price
+
+        for currency, total_price in formatted_currency_totals.items():
+            formatted_price = "{:,.1f}".format(total_price)
+            formatted_currency_totals[currency] = formatted_price
 
         try:
-            response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
+            response.context_data['currency_totals'] = formatted_currency_totals
         except:
             pass
+
         return response
 
     def get_price(self, obj):
@@ -147,7 +164,7 @@ class SalesAdmin(admin.ModelAdmin):
     ordering = ('-sold_time',)
     exclude = ('user', 'price', 'total_price')
 
-    # change_list_template = 'admin/warehouse_change_list.html'
+    change_list_template = 'admin/sales_anvar.html'
 
     def get_list_display(self, request):
         if request.user.is_superuser:
@@ -159,14 +176,30 @@ class SalesAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price=Sum('total_price'))[
-            'total_price'] or 0
-        formatted_price = "{:,.1f}".format(total_price)
+
+        # Calculate total prices for each currency
+        currency_totals = queryset.values('component__currency').annotate(
+            total_price=Sum('total_price'))
+
+        # Create a dictionary to store the formatted currency totals
+        formatted_currency_totals = {}
+        for currency_total in currency_totals:
+            currency = currency_total['component__currency']
+            total_price = currency_total['total_price'] or Decimal('0')
+            if currency in formatted_currency_totals:
+                formatted_currency_totals[currency] += total_price
+            else:
+                formatted_currency_totals[currency] = total_price
+
+        for currency, total_price in formatted_currency_totals.items():
+            formatted_price = "{:,.1f}".format(total_price)
+            formatted_currency_totals[currency] = formatted_price
 
         try:
-            response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
+            response.context_data['currency_totals'] = formatted_currency_totals
         except:
             pass
+
         return response
 
     def get_price(self, obj):
