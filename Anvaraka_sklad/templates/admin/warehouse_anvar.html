@@ -6,7 +6,7 @@
         <div>   
             <div style="font-weight: bold;">{{ summary_line }}</div>
             {% url 'warehouse_export_excel' as export_url %}
-            <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
+            {% comment %} <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a> {% endcomment %}
         </div>
     </div>    
     {% if currency_totals and request.user.is_superuser %}
