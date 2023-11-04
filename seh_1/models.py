@@ -153,6 +153,10 @@ class Warehouse(models.Model):
         verbose_name = 'Keltirilgan Komponentlar '
         verbose_name_plural = 'Ombor'
 
+    def save(self, *args, **kwargs):
+        self.price = self.component.price * self.quantity
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.quantity} {self.component.get_measurement_display()} - {self.component.title}"
 
@@ -235,6 +239,7 @@ class SalesEvent(models.Model):
                     "sotilgan qiymat kesilgan qiymatdan oshib ketdi")
 
     def save(self, *args, **kwargs):
+        self.single_sold_price = self.cut_product.product_production.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
         super().save(*args, **kwargs)
 
@@ -269,6 +274,7 @@ class SalesEvent2(models.Model):
                     "sotilgan qiymat kesilmagan qiymatdan oshib ketdi")
 
     def save(self, *args, **kwargs):
+        self.single_sold_price = self.non_cut_product.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
         super().save(*args, **kwargs)
 

@@ -19,7 +19,11 @@ class ProductAdmin(DraggableMPTTAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets = (
+            (None, {
+                'fields': ('title', 'parent', 'price', 'sell_price', 'currency', 'measurement', 'total', 'notification_limit')
+            }),
+        )
         if not request.user.is_superuser:
             price_fields = ('price', 'sell_price', 'currency')
             fieldsets[0][1]['fields'] = tuple(

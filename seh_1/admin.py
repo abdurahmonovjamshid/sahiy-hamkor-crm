@@ -69,11 +69,17 @@ admin.site.register(User, CustomUserAdmin)
 
 class ComponentAdmin(DraggableMPTTAdmin):
     mptt_indent_field = "title"
-    list_display = ('tree_actions', 'indented_title',
-                    'highlight_total', 'get_price', 'get_total_price', 'measurement')
     list_filter = ('parent',)
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('tree_actions', 'indented_title',
+                    'highlight_total', 'get_price', 'get_total_price', 'measurement')
+        else:
+            return ('tree_actions', 'indented_title',
+                    'highlight_total', 'measurement')
 
     def get_total_price(self, obj):
         if not obj.parent:
@@ -119,14 +125,27 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductComponentInline]
     list_filter = ['name']
     search_fields = ('name',)
-    list_display = ('name', 'tannarx', 'get_price', 'total_new', 'total_cut',
-                    'total_sold', 'non_sold_price', 'get_total_sold_price')
 
-    fieldsets = (
-        ('Umumiy malumot', {
-            'fields': ('name', 'price', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
-        }),
-    )
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            ('Umumiy malumot', {
+                'fields': ('name', 'price', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
+            }),
+        )
+        if not request.user.is_superuser:
+            print('/'*88)
+            price_fields = ('price', 'total_sold_price')
+            fieldsets[0][1]['fields'] = tuple(
+                field for field in fieldsets[0][1]['fields'] if field not in price_fields)
+        return fieldsets
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('name', 'tannarx', 'get_price', 'total_new', 'total_cut',
+                    'total_sold', 'non_sold_price', 'get_total_sold_price')
+        else:
+            return ('name', 'total_new', 'total_cut',
+                    'total_sold')
 
     def get_price(self, obj):
         return str(obj.price)+'$'
@@ -219,13 +238,18 @@ class ProductProductionAdmin(admin.ModelAdmin):
 
 
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'get_price', 'user', 'arrival_time')
     list_filter = ('arrival_time', 'component')
     date_hierarchy = 'arrival_time'
     ordering = ('-arrival_time',)
-    exclude = ('user',)
+    exclude = ('user', 'price')
 
     change_list_template = 'admin/warehouse_change_list.html'
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('__str__', 'get_price', 'user', 'arrival_time')
+        else:
+            return ('__str__', 'user', 'arrival_time')
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -315,20 +339,40 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 class SalesEventInline(admin.TabularInline):
     model = SalesEvent
     extra = 1
-    fields = ('cut_product', 'quantity_sold',
-              'single_sold_price', 'total_sold_price')
     autocomplete_fields = ('sales',)
+    readonly_fields = ('single_sold_price', 'total_sold_price')
 
-    readonly_fields = ['total_sold_price']
+    def get_fields(self, request, obj=None):
+        fields = ('cut_product', 'quantity_sold',
+                  'single_sold_price', 'total_sold_price')
+
+        # Check if the user is a superuser
+        if not request.user.is_superuser:
+            # Remove the 'single_sold_price' and 'total_sold_price' fields from the inline
+            fields = tuple(field for field in fields if field not in (
+                'single_sold_price', 'total_sold_price'))
+
+        return fields
 
 
 class SalesEventInline2(admin.TabularInline):
     model = SalesEvent2
     extra = 1
-    fields = ('non_cut_product', 'quantity_sold',
-              'single_sold_price', 'total_sold_price')
-    readonly_fields = ('total_sold_price',)
+    fields = ('non_cut_product', 'quantity_sold')
+    readonly_fields = ('total_sold_price', 'single_sold_price')
     autocomplete_fields = ('sales',)
+
+    def get_fields(self, request, obj=None):
+        fields = ('non_cut_product', 'quantity_sold',
+                  'single_sold_price', 'total_sold_price')
+
+        # Check if the user is a superuser
+        if not request.user.is_superuser:
+            # Remove the 'single_sold_price' and 'total_sold_price' fields from the inline
+            fields = tuple(field for field in fields if field not in (
+                'single_sold_price', 'total_sold_price'))
+
+        return fields
 
 
 class SalesAdmin(admin.ModelAdmin):
