@@ -8,7 +8,7 @@
             <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
         </div>
     </div>
-    {% if currency_totals %}
+    {% if currency_totals and request.user.is_superuser %}
         <div>
             <h3>Umumiy narxlar:</h3>
             <ul>
