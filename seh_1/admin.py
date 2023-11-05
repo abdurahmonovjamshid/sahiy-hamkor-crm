@@ -377,8 +377,6 @@ class SalesEventInline2(admin.TabularInline):
 
 class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
-    list_display = ['buyer', 'seller',
-                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'user', 'date']
     list_filter = ['buyer', 'seller', 'user', 'date']
     search_fields = ['buyer', 'seller']
     date_hierarchy = 'date'
@@ -386,6 +384,14 @@ class SalesAdmin(admin.ModelAdmin):
     exclude = ('user',)
 
     change_list_template = 'admin/sales_change_list.html'
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ['buyer', 'seller',
+                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'user', 'date']
+        else:
+            return ['buyer', 'seller',
+                    'get_sales_events_user', 'get_sales_event2s_user', 'user', 'date']
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -413,11 +419,23 @@ class SalesAdmin(admin.ModelAdmin):
 
     get_sales_events.short_description = 'Kesilgan mahsulotlar'
 
+    def get_sales_events_user(self, obj):
+        sales_events = obj.selling_cut.all()
+        return ", ".join(str(sale_event) for sale_event in sales_events)
+
+    get_sales_events_user.short_description = 'Kesilgan mahsulotlar'
+
     def get_sales_event2s(self, obj):
         sales_event2s = obj.selling.all()
         return ", ".join(str(sale_event2)+f' ({sale_event2.single_sold_price}$ dan)' for sale_event2 in sales_event2s)
 
     get_sales_event2s.short_description = 'Kesilmagan mahsulotlar'
+
+    def get_sales_event2s_user(self, obj):
+        sales_event2s = obj.selling.all()
+        return ", ".join(str(sale_event2) for sale_event2 in sales_event2s)
+
+    get_sales_event2s_user.short_description = 'Kesilmagan mahsulotlar'
 
     def save_model(self, request, obj, form, change):
         # Set the current logged-in user as the seller

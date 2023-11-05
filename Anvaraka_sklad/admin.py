@@ -3,7 +3,16 @@ from django.db.models import F, Sum
 from django.utils.html import format_html
 from mptt.admin import DraggableMPTTAdmin
 
-from .models import Product, Warehouse, Sales
+from .models import Product, Warehouse, Sales, ProductComponent
+
+
+class ProductComponentInline(admin.TabularInline):
+    model = ProductComponent
+    extra = 1
+    fields = ['product', 'quantity', 'quantity_in_measurement']
+    autocomplete_fields = ['product']
+    verbose_name_plural = 'Produkt Komponentlari'
+    verbose_name = 'komponent'
 
 
 class ProductAdmin(DraggableMPTTAdmin):
@@ -11,6 +20,7 @@ class ProductAdmin(DraggableMPTTAdmin):
     list_filter = ('parent',)
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
+    inlines = [ProductComponentInline]
 
     fieldsets = (
         (None, {
