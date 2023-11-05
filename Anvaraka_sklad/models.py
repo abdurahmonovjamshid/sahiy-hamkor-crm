@@ -61,6 +61,9 @@ class ProductComponent(models.Model):
     quantity_in_measurement = models.FloatField(
         verbose_name="Miqdor", unique=True)
 
+    class Meta:
+        ordering = ('-quantity',)
+
     def __str__(self):
         return f'({self.quantity} ta {self.quantity_in_measurement}'
 
