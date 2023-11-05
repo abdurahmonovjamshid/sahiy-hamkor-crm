@@ -72,7 +72,7 @@ def warehouse_delete(sender, instance, **kwargs):
 def sales_add(sender, instance, created, **kwargs):
     if created:
         component = instance.component
-        component.total -= instance.quantity
+        component.total -= instance.quantity * instance.quantity_in_measurement
         component.save()
 
 
@@ -81,12 +81,14 @@ def sales_presave(sender, instance, **kwargs):
     if instance.pk:
         old_warehouse = Sales.objects.get(pk=instance.pk)
         component = instance.component
-        component.total = component.total + old_warehouse.quantity - instance.quantity
+        component.total = component.total + \
+            (old_warehouse.quantity*old_warehouse.quantity_in_measurement) - \
+            (instance.quantity*instance.quantity_in_measurement)
         component.save()
 
 
 @receiver(post_delete, sender=Sales)
 def sales_delete(sender, instance, **kwargs):
     component = instance.component
-    component.total += instance.quantity
+    component.total += instance.quantity * instance.quantity_in_measurement
     component.save()
