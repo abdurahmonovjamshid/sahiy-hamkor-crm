@@ -123,3 +123,15 @@ class Sales(models.Model):
         self.price = self.component.sell_price
         self.total_price = self.price * self.quantity*self.quantity_in_measurement
         super().save(*args, **kwargs)
+
+
+class SalesEvent(models.Model):
+    sale = models.ForeignKey(
+        Sales, related_name='payment', on_delete=models.CASCADE)
+    price = models.FloatField(verbose_name='To\'lov')
+    paid = models.DateTimeField(
+        auto_now_add=True, verbose_name='T\'olov qilingan sana')
+
+    class Meta:
+        verbose_name = 'To\'lov '
+        verbose_name_plural = 'To\'lovlar'

@@ -3,7 +3,7 @@ from django.db.models import F, Sum
 from django.utils.html import format_html
 from mptt.admin import DraggableMPTTAdmin
 
-from .models import Product, Warehouse, Sales, ProductComponent
+from .models import Product, Warehouse, Sales, ProductComponent, SalesEvent
 
 
 class ProductComponentInline(admin.TabularInline):
@@ -171,9 +171,20 @@ class WarehouseAdmin(admin.ModelAdmin):
         return super().has_change_permission(request, obj)
 
 
+class SalesEventtInline(admin.TabularInline):
+    model = SalesEvent
+    extra = 1
+    fields = ['price', 'paid']
+    autocomplete_fields = ['sale']
+    readonly_fields = ['paid']
+    verbose_name_plural = 'To\'lovlar '
+    verbose_name = 'to\'lov'
+
+
 class SalesAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'buyer', 'get_price', 'user', 'sold_time')
+    inlines = [SalesEventtInline]
     list_filter = ('sold_time', 'component')
+    search_fields = ['buyer']
     date_hierarchy = 'sold_time'
     ordering = ('-sold_time',)
     exclude = ('user', 'price', 'total_price')
@@ -182,7 +193,7 @@ class SalesAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('__str__', 'buyer', 'get_price', 'user', 'sold_time')
+            return ('__str__', 'buyer', 'get_price', 'get_paid', 'user', 'sold_time')
         else:
             return ('__str__', 'buyer', 'user', 'sold_time')
 
@@ -215,6 +226,20 @@ class SalesAdmin(admin.ModelAdmin):
             pass
 
         return response
+
+    def get_paid(self, obj):
+        total_paid = obj.payment.aggregate(
+            total_paid=Sum('price'))['total_paid']
+        if total_paid:
+            if total_paid == obj.total_price:
+                return 'full paid'
+            formatted_price = "{:,.1f}".format(total_paid)
+            return formatted_price+' '+obj.component.currency
+        return total_paid
+
+        return total_paid
+
+    get_paid.short_description = "To'langan"
 
     def get_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.total_price)
