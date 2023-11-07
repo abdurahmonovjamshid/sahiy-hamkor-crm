@@ -159,7 +159,8 @@ class ProductAdmin(admin.ModelAdmin):
     get_price.admin_order_field = 'price'
 
     def non_sold_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.non_sold_price)
+        formatted_price = "{:,.1f}".format(
+            obj.price*(obj.total_new+obj.total_cut))
         return formatted_price+'$'
     non_sold_price.short_description = 'Mavjud tovar narxi'
     non_sold_price.admin_order_field = 'non_sold_price'
