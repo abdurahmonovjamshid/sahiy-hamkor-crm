@@ -178,10 +178,12 @@ class ProductReProduction(models.Model):
 
 class CuttingEvent(models.Model):
     product_production = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut': 0, 'total_sold': 0}, verbose_name='Tovar')
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_sold': 0}, verbose_name='Tovar')
     quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
+
+    is_complete = models.BooleanField(default=False)
 
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni", default=0)

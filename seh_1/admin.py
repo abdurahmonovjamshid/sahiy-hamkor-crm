@@ -302,7 +302,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 class CuttingEventInline(admin.TabularInline):
     model = CuttingEvent
     extra = 1
-    fields = ('product_production', 'quantity_cut', 'quantity_sold')
+    fields = ('product_production', 'quantity_cut','is_complete', 'quantity_sold')
     autocomplete_fields = ('product_reproduction',)
     readonly_fields = ('quantity_sold',)
 
