@@ -198,7 +198,7 @@ class ProductAdmin(admin.ModelAdmin):
         formatted_price = "{:,.1f}".format(total_price)
 
         total_product_price = queryset.aggregate(total_product_price=Sum((F('total_new') + F('total_cut'))*F('price')))[
-            'total_product_price'] or 0s
+            'total_product_price'] or 0
         formatted_pr_price = "{:,.1f}".format(total_product_price)
 
         try:
