@@ -142,10 +142,16 @@ class ProductAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('name', 'tannarx', 'get_price', 'total_new', 'total_cut',
-                    'total_sold', 'non_sold_price', 'get_total_sold_price')
+                    'total_sold', 'non_sold_price', 'get_total_sold_price', 'profit')
         else:
             return ('name', 'total_new', 'total_cut',
                     'total_sold')
+
+    def profit(self, obj):
+        formatted_price = "{:,.1f}".format(
+            obj.total_sold_price - (obj.single_product_price*obj.total_sold))
+        return formatted_price + '$'
+    profit.short_description = 'Foyda'
 
     def get_price(self, obj):
         return str(obj.price)+'$'
@@ -153,17 +159,13 @@ class ProductAdmin(admin.ModelAdmin):
     get_price.admin_order_field = 'price'
 
     def non_sold_price(self, obj):
-        formatted_price = "{:,.1f}".format(
-            (obj.total_new + obj.total_cut)*obj.price)
+        formatted_price = "{:,.1f}".format(obj.non_sold_price)
         return formatted_price+'$'
     non_sold_price.short_description = 'Mavjud tovar narxi'
     non_sold_price.admin_order_field = 'non_sold_price'
 
     def tannarx(self, obj):
-        product_price = 0
-        for productcomponent in obj.productcomponent_set.all():
-            product_price += productcomponent.quantity*productcomponent.component.price
-        return "{:,.1f}".format(product_price)+'$'
+        return "{:,.1f}".format(obj.single_product_price)+'$'
     tannarx.short_description = 'Tan narxi'
     tannarx.admin_order_field = 'single_product_price'
 
@@ -171,7 +173,7 @@ class ProductAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
             single_product_price=Sum(
-                F('productcomponent__quantity') * F('productcomponent__component__price'))
+                F('productcomponent__quantity') * F('productcomponent__component__price')*1.18)
         )
         queryset = queryset.annotate(
             non_sold_price=Sum(
@@ -196,7 +198,7 @@ class ProductAdmin(admin.ModelAdmin):
         formatted_price = "{:,.1f}".format(total_price)
 
         total_product_price = queryset.aggregate(total_product_price=Sum((F('total_new') + F('total_cut'))*F('price')))[
-            'total_product_price'] or 0
+            'total_product_price'] or 0s
         formatted_pr_price = "{:,.1f}".format(total_product_price)
 
         try:
