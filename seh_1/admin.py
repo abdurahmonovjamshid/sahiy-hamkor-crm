@@ -223,6 +223,7 @@ class ProductProductionAdmin(admin.ModelAdmin):
                     'total_sold', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date', 'series')
     readonly_fields = ('user', 'total_cut', 'total_sold', 'production_date')
+    # exclude = ['cutting_complate']
     date_hierarchy = 'production_date'
     ordering = ('-production_date',)
     change_list_template = 'admin/production_change_list.html'

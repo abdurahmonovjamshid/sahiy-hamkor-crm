@@ -437,6 +437,10 @@ def curring_create(sender, instance, created, **kwargs):
             product.total_cut += instance.quantity_cut
             product.save()
 
+            if instance.is_complete:
+                pr_production.cutting_complate = True
+                pr_production.save()
+
         except Exception as e:
             print(e)
 
@@ -455,6 +459,11 @@ def cutting_delete(sender, instance, **kwargs):
         product.total_cut -= instance.quantity_cut + instance.quantity_sold
         product.save()
         product_reproduction = instance.product_reproduction
+
+        if instance.is_complete:
+            pr_production.cutting_complate = False
+            pr_production.save()
+
         if product_reproduction.cutting.all().count() == 0:
             product_reproduction.delete()
     except Exception as e:

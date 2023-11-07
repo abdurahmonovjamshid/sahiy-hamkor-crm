@@ -125,6 +125,8 @@ class ProductProduction(models.Model):
     total_sold = models.IntegerField(
         default=0, verbose_name="sotilganlar soni")
 
+    cutting_complate = models.BooleanField(default=False)
+
     production_date = models.DateTimeField(
         auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
 
@@ -178,7 +180,7 @@ class ProductReProduction(models.Model):
 
 class CuttingEvent(models.Model):
     product_production = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_sold': 0}, verbose_name='Tovar')
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_sold': 0, 'quantity__gt': 0, 'cutting_complate': False}, verbose_name='Tovar')
     quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
@@ -256,7 +258,7 @@ class SalesEvent(models.Model):
 
 class SalesEvent2(models.Model):
     non_cut_product = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0})
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, 'cutting_complate': True})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
