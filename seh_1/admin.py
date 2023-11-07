@@ -166,7 +166,10 @@ class ProductAdmin(admin.ModelAdmin):
     non_sold_price.admin_order_field = 'non_sold_price'
 
     def tannarx(self, obj):
-        return "{:,.1f}".format(obj.single_product_price)+'$'
+        product_price = 0
+        for productcomponent in obj.productcomponent_set.all():
+            product_price += productcomponent.quantity*productcomponent.component.price
+        return "{:,.1f}".format(product_price*1.18)+'$'
     tannarx.short_description = 'Tan narxi'
     tannarx.admin_order_field = 'single_product_price'
 
