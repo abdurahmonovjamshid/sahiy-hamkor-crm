@@ -148,8 +148,13 @@ class ProductAdmin(admin.ModelAdmin):
                     'total_sold')
 
     def profit(self, obj):
+        product_price = 0
+        for productcomponent in obj.productcomponent_set.all():
+            product_price += productcomponent.quantity*productcomponent.component.price
+        product_price = 1.18*product_price
+        
         formatted_price = "{:,.1f}".format(
-            obj.total_sold_price - (obj.single_product_price*obj.total_sold))
+            obj.total_sold_price - (product_price*obj.total_sold))
         return formatted_price + '$'
     profit.short_description = 'Foyda'
 
