@@ -201,13 +201,19 @@ class SellingAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return ('__str__', 'get_sold_products', 'get_paid', 'user', 'sold_time')
         else:
-            return ('__str__', 'user', 'sold_time')
+            return ('__str__', 'get_sold_products_user', 'user', 'sold_time')
 
     def get_sold_products(self, obj):
         sales = obj.sales_set.all()
         return "; ".join(
             f"{text} ({text.total_price:,.1f}{text.component.currency})"
             for text in sales
+        )
+
+    def get_sold_products_user(self, obj):
+        sales = obj.sales_set.all()
+        return "; ".join(
+            f"{text}" for text in sales
         )
 
     def changelist_view(self, request, extra_context=None):
