@@ -16,11 +16,9 @@ def warehouse_add(sender, instance, created, **kwargs):
 
         if not created:
             product_component.quantity += instance.quantity
-            product_component.box += instance.box
             product_component.save()
         else:
             product_component.quantity = instance.quantity
-            product_component.box = instance.box
             product_component.save()
 
 
@@ -40,12 +38,9 @@ def warehouse_presave(sender, instance, **kwargs):
                 quantity_in_measurement=old_warehouse.quantity_in_measurement)
 
             product_component.quantity -= old_warehouse.quantity
-            product_component.box -= old_warehouse.box
 
             if product_component.quantity < 0:
                 product_component.quantity = 0
-            if product_component.box < 0:
-                product_component.box = 0
             product_component.save()
 
         product_component, created = ProductComponent.objects.get_or_create(
@@ -53,11 +48,9 @@ def warehouse_presave(sender, instance, **kwargs):
 
         if not created:
             product_component.quantity += instance.quantity
-            product_component.box += instance.box
             product_component.save()
         else:
             product_component.quantity = instance.quantity
-            product_component.box = instance.box
             product_component.save()
 
 
@@ -71,12 +64,9 @@ def warehouse_delete(sender, instance, **kwargs):
         product_component = instance.component.component.get(
             quantity_in_measurement=instance.quantity_in_measurement)
         product_component.quantity -= instance.quantity
-        product_component.box -= instance.box
 
         if product_component.quantity < 0:
             product_component.quantity = 0
-        if product_component.box < 0:
-            product_component.box = 0
         product_component.save()
 
 
@@ -85,9 +75,8 @@ def sales_add(sender, instance, created, **kwargs):
     if created:
         component = instance.component
 
-        # Calculate the cumulative quantities and boxes
+        # Calculate the cumulative quantities
         total_quantity = instance.quantity * instance.quantity_in_measurement
-        total_box = instance.box
 
         # Update the component totals
         component.total -= total_quantity
@@ -97,14 +86,10 @@ def sales_add(sender, instance, created, **kwargs):
             product_component = component.component.get(
                 quantity_in_measurement=instance.quantity_in_measurement)
 
-            # Calculate the cumulative quantities and boxes for the product component
+            # Calculate the cumulative quantities for the product component
             product_component.quantity -= instance.quantity
-            product_component.box -= instance.box
             if product_component.quantity < 0:
                 product_component.quantity = 0
-
-            if product_component.box < 0:
-                product_component.box = 0
 
             product_component.save()
 
@@ -119,7 +104,6 @@ def sales_add(sender, instance, created, **kwargs):
         for sales_instance in sales_instances:
             total_quantity += sales_instance.quantity * \
                 sales_instance.quantity_in_measurement
-            total_box += sales_instance.box
 
             component.total -= sales_instance.quantity * \
                 sales_instance.quantity_in_measurement
@@ -145,19 +129,15 @@ def sales_presave(sender, instance, **kwargs):
                 quantity_in_measurement=old_sales.quantity_in_measurement)
 
             product_component.quantity += old_sales.quantity
-            product_component.box += old_sales.box
             product_component.save()
 
         if instance.component.component.filter(quantity_in_measurement=instance.quantity_in_measurement):
             product_component = instance.component.component.get(
                 quantity_in_measurement=instance.quantity_in_measurement)
             product_component.quantity -= instance.quantity
-            product_component.box -= instance.box
 
             if product_component.quantity < 0:
                 product_component.quantity = 0
-            if product_component.box < 0:
-                product_component.box = 0
             product_component.save()
 
 
@@ -171,5 +151,4 @@ def sales_delete(sender, instance, **kwargs):
         product_component = component.component.get(
             quantity_in_measurement=instance.quantity_in_measurement)
         product_component.quantity += instance.quantity
-        product_component.box += instance.box
         product_component.save()

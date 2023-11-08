@@ -60,7 +60,6 @@ class ProductComponent(models.Model):
 
     quantity = models.IntegerField(verbose_name="Dona", default=0)
     quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
-    box = models.IntegerField(verbose_name="Qutilar soni", default=0)
 
     class Meta:
         unique_together = ['product', 'quantity_in_measurement']
@@ -76,7 +75,6 @@ class Warehouse(models.Model):
 
     quantity = models.IntegerField(verbose_name="Dona")
     quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
-    box = models.IntegerField(verbose_name="Qutilar soni", default=0)
 
     price = models.FloatField(default=0, verbose_name='Narxi')
     total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
@@ -129,7 +127,6 @@ class Sales(models.Model):
 
     quantity = models.IntegerField(verbose_name="Dona")
     quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
-    box = models.IntegerField(verbose_name="Qutilar soni", default=0)
 
     price = models.FloatField(default=0, verbose_name='Narxi')
     total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')

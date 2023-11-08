@@ -10,7 +10,7 @@ from .models import Product, Warehouse, Sales, ProductComponent, SalesEvent, Sel
 class ProductComponentInline(admin.TabularInline):
     model = ProductComponent
     extra = 1
-    fields = ['product', 'quantity', 'quantity_in_measurement', 'box']
+    fields = ['product', 'quantity', 'quantity_in_measurement',]
     autocomplete_fields = ['product']
     verbose_name_plural = 'Produkt Komponentlari'
     verbose_name = 'komponent'
@@ -185,7 +185,7 @@ class SalesEventtInline(admin.TabularInline):
 class SalesInline(admin.TabularInline):
     model = Sales
     extra = 1
-    fields = ['component', 'quantity', 'quantity_in_measurement', 'box']
+    fields = ['component', 'quantity', 'quantity_in_measurement',]
     autocomplete_fields = ['selling']
     verbose_name_plural = 'Sotilgan tovarlar '
     verbose_name = 'tovarlar'
