@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from mptt.models import MPTTModel
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -60,6 +61,7 @@ class ProductComponent(models.Model):
     quantity = models.IntegerField(verbose_name="Dona", default=0)
     quantity_in_measurement = models.FloatField(
         verbose_name="Miqdor", unique=True)
+    box = models.IntegerField(verbose_name="Qutilar soni", default=0)
 
     class Meta:
         ordering = ('-quantity',)
@@ -74,6 +76,7 @@ class Warehouse(models.Model):
 
     quantity = models.IntegerField(verbose_name="Dona")
     quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
+    box = models.IntegerField(verbose_name="Qutilar soni", default=0)
 
     price = models.FloatField(default=0, verbose_name='Narxi')
     total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
@@ -96,24 +99,43 @@ class Warehouse(models.Model):
         super().save(*args, **kwargs)
 
 
-class Sales(models.Model):
-    component = models.ForeignKey(
-        Product, on_delete=models.CASCADE, verbose_name='Sotilgan mahsulot ', limit_choices_to={'parent__isnull': False})
+class Selling(models.Model):
     buyer = models.CharField(max_length=100, verbose_name='Xaridor')
-
-    quantity = models.IntegerField(verbose_name="Dona")
-    quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
-
-    price = models.FloatField(default=0, verbose_name='Narxi')
-    total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='xodim', related_name='salsekeeper')
     sold_time = models.DateTimeField(
         auto_now_add=True, verbose_name='Sotilgan sana')
 
-    user = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='xodim', related_name='salsekeeper')
-
     class Meta:
         verbose_name = 'Sotilgan Mahsulot '
+        verbose_name_plural = 'Sotuvlar'
+
+    def __str__(self):
+        return self.buyer
+
+    def get_total_price_by_currency(self):
+        total_price = self.payment.values(
+            'currency').annotate(total=Sum('price'))
+        currency_totals = " va ".join(
+            f"{item['total']:,.1f}{item['currency']}" for item in total_price)
+        return currency_totals
+
+
+class Sales(models.Model):
+    component = models.ForeignKey(
+        Product, on_delete=models.CASCADE, verbose_name='Sotilgan mahsulot ', limit_choices_to={'parent__isnull': False})
+
+    selling = models.ForeignKey(Selling, on_delete=models.CASCADE, null=True)
+
+    quantity = models.IntegerField(verbose_name="Dona")
+    quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
+    box = models.IntegerField(verbose_name="Qutilar soni", default=0)
+
+    price = models.FloatField(default=0, verbose_name='Narxi')
+    total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
+
+    class Meta:
+        verbose_name = 'Sotilgan tovar '
         verbose_name_plural = 'Sotuv'
 
     def __str__(self):
@@ -126,11 +148,19 @@ class Sales(models.Model):
 
 
 class SalesEvent(models.Model):
-    sale = models.ForeignKey(
-        Sales, related_name='payment', on_delete=models.CASCADE)
+
+    CURRENCY_CHOICES = [
+        ('sum', 'So\'m'),
+        ('$', 'USD')
+    ]
+    selling = models.ForeignKey(
+        Selling, related_name='payment', on_delete=models.CASCADE)
     price = models.FloatField(verbose_name='To\'lov')
     paid = models.DateTimeField(
         auto_now_add=True, verbose_name='T\'olov qilingan sana')
+
+    currency = models.CharField(
+        max_length=3, choices=CURRENCY_CHOICES, verbose_name="Valyuta birligi", default='$')
 
     class Meta:
         verbose_name = 'To\'lov '

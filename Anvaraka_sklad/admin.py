@@ -3,13 +3,13 @@ from django.db.models import F, Sum
 from django.utils.html import format_html
 from mptt.admin import DraggableMPTTAdmin
 
-from .models import Product, Warehouse, Sales, ProductComponent, SalesEvent
+from .models import Product, Warehouse, Sales, ProductComponent, SalesEvent, Selling
 
 
 class ProductComponentInline(admin.TabularInline):
     model = ProductComponent
     extra = 1
-    fields = ['product', 'quantity', 'quantity_in_measurement']
+    fields = ['product', 'quantity', 'quantity_in_measurement', 'box']
     autocomplete_fields = ['product']
     verbose_name_plural = 'Produkt Komponentlari'
     verbose_name = 'komponent'
@@ -174,28 +174,41 @@ class WarehouseAdmin(admin.ModelAdmin):
 class SalesEventtInline(admin.TabularInline):
     model = SalesEvent
     extra = 1
-    fields = ['price', 'paid']
-    autocomplete_fields = ['sale']
+    fields = ['price', 'currency', 'paid']
+    autocomplete_fields = ['selling']
     readonly_fields = ['paid']
     verbose_name_plural = 'To\'lovlar '
     verbose_name = 'to\'lov'
 
 
-class SalesAdmin(admin.ModelAdmin):
-    inlines = [SalesEventtInline]
-    list_filter = ('sold_time', 'component')
+class SalesInline(admin.TabularInline):
+    model = Sales
+    extra = 1
+    fields = ['component', 'quantity', 'quantity_in_measurement', 'box']
+    autocomplete_fields = ['selling']
+    verbose_name_plural = 'Sotilgan tovarlar '
+    verbose_name = 'tovarlar'
+
+
+class SellingAdmin(admin.ModelAdmin):
+    inlines = [SalesInline, SalesEventtInline]
     search_fields = ['buyer']
-    date_hierarchy = 'sold_time'
-    ordering = ('-sold_time',)
-    exclude = ('user', 'price', 'total_price')
+    exclude = ('user', 'sold_time')
 
     change_list_template = 'admin/sales_anvar.html'
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('__str__', 'buyer', 'get_price', 'get_paid', 'user', 'sold_time')
+            return ('__str__', 'get_sold_products', 'get_paid', 'user', 'sold_time')
         else:
-            return ('__str__', 'buyer', 'user', 'sold_time')
+            return ('__str__', 'user', 'sold_time')
+
+    def get_sold_products(self, obj):
+        sales = obj.sales_set.all()
+        return "; ".join(
+            f"{text} ({text.total_price:,.1f}{text.component.currency})"
+            for text in sales
+        )
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -203,13 +216,13 @@ class SalesAdmin(admin.ModelAdmin):
         queryset = self.get_queryset(request)
 
         # Calculate total prices for each currency
-        currency_totals = queryset.values('component__currency').annotate(
-            total_price=Sum('total_price'))
+        currency_totals = queryset.values('sales__component__currency').annotate(
+            total_price=Sum('sales__total_price'))
 
         # Create a dictionary to store the formatted currency totals
         formatted_currency_totals = {}
         for currency_total in currency_totals:
-            currency = currency_total['component__currency']
+            currency = currency_total['sales__component__currency']
             total_price = currency_total['total_price'] or Decimal('0')
             if currency in formatted_currency_totals:
                 formatted_currency_totals[currency] += total_price
@@ -228,25 +241,11 @@ class SalesAdmin(admin.ModelAdmin):
         return response
 
     def get_paid(self, obj):
-        total_paid = obj.payment.aggregate(
-            total_paid=Sum('price'))['total_paid']
-        if total_paid:
-            if total_paid == obj.total_price:
-                return 'full paid'
-            formatted_price = "{:,.1f}".format(total_paid)
-            return formatted_price+' '+obj.component.currency
-        return total_paid
+        return obj.get_total_price_by_currency()
 
         return total_paid
 
     get_paid.short_description = "To'langan"
-
-    def get_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.total_price)
-        return formatted_price+' '+obj.component.currency
-
-    get_price.short_description = 'Narxi'
-    get_price.admin_order_field = 'price'
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:
@@ -266,4 +265,4 @@ class SalesAdmin(admin.ModelAdmin):
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Warehouse, WarehouseAdmin)
-admin.site.register(Sales, SalesAdmin)
+admin.site.register(Selling, SellingAdmin)

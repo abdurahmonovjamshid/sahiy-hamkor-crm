@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-kh^ce^2&9sw%_0of$9zd5i766(%&k53*8@(#k1w2fj2xs39g_2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -148,7 +148,7 @@ JAZZMIN_SETTINGS = {
 
     ],
     "show_sidebar": True,
-    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse", 'seh_1.productreproduction', "Anvaraka_sklad.product", "Anvaraka_sklad.warehouse", "Anvaraka_sklad.sales",],
+    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse", 'seh_1.productreproduction', "Anvaraka_sklad.product", "Anvaraka_sklad.warehouse", "Anvaraka_sklad.selling",],
 
     "icons": {
         "auth": "fas fa-users-cog",
@@ -163,7 +163,7 @@ JAZZMIN_SETTINGS = {
 
         "Anvaraka_sklad.product": "fas fa-cubes",
         "Anvaraka_sklad.warehouse": "fas fa-warehouse",
-        "Anvaraka_sklad.sales": "fas fa-shopping-cart",
+        "Anvaraka_sklad.selling": "fas fa-shopping-cart",
     },
 }
 
