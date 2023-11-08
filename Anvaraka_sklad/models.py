@@ -59,11 +59,11 @@ class ProductComponent(models.Model):
         Product, on_delete=models.CASCADE, verbose_name='product', related_name='component')
 
     quantity = models.IntegerField(verbose_name="Dona", default=0)
-    quantity_in_measurement = models.FloatField(
-        verbose_name="Miqdor", unique=True)
+    quantity_in_measurement = models.FloatField(verbose_name="Miqdor")
     box = models.IntegerField(verbose_name="Qutilar soni", default=0)
 
     class Meta:
+        unique_together = ['product', 'quantity_in_measurement']
         ordering = ('-quantity',)
 
     def __str__(self):
