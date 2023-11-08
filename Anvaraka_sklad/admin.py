@@ -1,3 +1,4 @@
+from django.utils.safestring import mark_safe
 from django.contrib import admin
 from django.db.models import F, Sum
 from django.utils.html import format_html
@@ -189,6 +190,15 @@ class SalesInline(admin.TabularInline):
     verbose_name_plural = 'Sotilgan tovarlar '
     verbose_name = 'tovarlar'
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        if obj:
+            return False
+        else:
+            return True
+
 
 class SellingAdmin(admin.ModelAdmin):
     inlines = [SalesInline, SalesEventtInline]
@@ -204,11 +214,12 @@ class SellingAdmin(admin.ModelAdmin):
             return ('__str__', 'get_sold_products_user', 'user', 'sold_time')
 
     def get_sold_products(self, obj):
-        sales = obj.sales_set.all()
-        return "; ".join(
-            f"{text} ({text.total_price:,.1f}{text.component.currency})"
-            for text in sales
-        )
+        sales = obj.sales_set.values(
+            'component__title', 'component__currency', 'component__measurement').annotate(
+                total_price=Sum('total_price')).annotate(total_measurement=Sum(F('quantity')*F('quantity_in_measurement')))
+        return mark_safe("<br>".join(f"{text['total_measurement']}{text['component__measurement']} {text['component__title']} - {text['total_price']:,.1f}{text['component__currency']}"
+                                     for text in sales
+                                     ))
 
     def get_sold_products_user(self, obj):
         sales = obj.sales_set.all()

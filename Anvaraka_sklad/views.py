@@ -94,7 +94,8 @@ def sales_add(sender, instance, created, **kwargs):
         component.save()
 
         try:
-            product_component = component.component.get(quantity_in_measurement=instance.quantity_in_measurement)
+            product_component = component.component.get(
+                quantity_in_measurement=instance.quantity_in_measurement)
 
             # Calculate the cumulative quantities and boxes for the product component
             product_component.quantity -= instance.quantity
@@ -111,30 +112,18 @@ def sales_add(sender, instance, created, **kwargs):
             pass
 
         # Perform cumulative calculations for subsequent Sales instances
-        sales_instances = Sales.objects.filter(component=component)
+        sales_instances = Sales.objects.filter(
+            component=component, selling=instance.selling)
         sales_instances = sales_instances.exclude(pk=instance.pk)
 
         for sales_instance in sales_instances:
-            total_quantity += sales_instance.quantity * sales_instance.quantity_in_measurement
+            total_quantity += sales_instance.quantity * \
+                sales_instance.quantity_in_measurement
             total_box += sales_instance.box
 
-            component.total -= sales_instance.quantity * sales_instance.quantity_in_measurement
+            component.total -= sales_instance.quantity * \
+                sales_instance.quantity_in_measurement
             component.save()
-
-            # try:
-            #     product_component = component.component.get(quantity_in_measurement=sales_instance.quantity_in_measurement)
-            #     product_component.quantity -= sales_instance.quantity
-            #     product_component.box -= sales_instance.box
-            #     if product_component.quantity < 0:
-            #         product_component.quantity = 0
-
-            #     if product_component.box < 0:
-            #         product_component.box = 0
-
-            #     product_component.save()
-
-            # except ProductComponent.DoesNotExist:
-            #     pass
 
         # Update the instance's total_price based on the cumulative quantities
         instance.total_price = instance.price * total_quantity
