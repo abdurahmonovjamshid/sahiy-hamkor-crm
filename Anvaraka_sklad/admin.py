@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.utils.safestring import mark_safe
 from django.contrib import admin
 from django.db.models import F, Sum
