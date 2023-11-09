@@ -152,7 +152,7 @@ class ProductAdmin(admin.ModelAdmin):
         for productcomponent in obj.productcomponent_set.all():
             product_price += productcomponent.quantity*productcomponent.component.price
         product_price = 1.18*product_price
-        
+
         formatted_price = "{:,.1f}".format(
             obj.total_sold_price - (product_price*obj.total_sold))
         return formatted_price + '$'
@@ -303,7 +303,8 @@ class WarehouseAdmin(admin.ModelAdmin):
 class CuttingEventInline(admin.TabularInline):
     model = CuttingEvent
     extra = 1
-    fields = ('product_production', 'quantity_cut','is_complete', 'quantity_sold')
+    fields = ('product_production', 'quantity_cut',
+              'is_complete', 'quantity_sold')
     autocomplete_fields = ('product_reproduction',)
     readonly_fields = ('quantity_sold',)
 
@@ -353,6 +354,9 @@ class SalesEventInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ('sales',)
     readonly_fields = ('single_sold_price', 'total_sold_price')
+
+    def label_from_instance(self, obj):
+        return f"{obj.cut_product.series}-{obj.cut_product.product} ({obj.cut_product.total_cut} dona)"
 
     def get_fields(self, request, obj=None):
         fields = ('cut_product', 'quantity_sold',
