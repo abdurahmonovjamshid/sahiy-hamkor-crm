@@ -240,7 +240,7 @@ def export_reproduction_excel(request):
                            cutting_event.product_production.product.name) for cutting_event in cutting_events)
         total_cut = 0
         for cuttingevent in reproduction.cutting.all():
-            total_cut += cuttingevent.quantity_cut + cuttingevent.quantity_sold
+            total_cut += cuttingevent.quantity_cut
         row = [
             reproduction.user.username,
             total_cut,
@@ -448,21 +448,21 @@ def curring_create(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=CuttingEvent)
 def cutting_delete(sender, instance, **kwargs):
     try:
-
         pr_production = instance.product_production
-        pr_production.quantity += instance.quantity_cut + instance.quantity_sold
-        pr_production.total_cut -= instance.quantity_cut + instance.quantity_sold
+        pr_production.quantity += instance.quantity_cut
+        pr_production.total_cut -= instance.quantity_cut
         pr_production.save()
 
         product = pr_production.product
-        product.total_new += instance.quantity_cut + instance.quantity_sold
-        product.total_cut -= instance.quantity_cut + instance.quantity_sold
+        product.total_new += instance.quantity_cut
+        product.total_cut -= instance.quantity_cut
         product.save()
-        product_reproduction = instance.product_reproduction
 
         if instance.is_complete:
             pr_production.cutting_complate = False
             pr_production.save()
+
+        product_reproduction = instance.product_reproduction
 
         if product_reproduction.cutting.all().count() == 0:
             product_reproduction.delete()
@@ -473,13 +473,10 @@ def cutting_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=SalesEvent)
 def sales_create(sender, instance, created, **kwargs):
     if created:
+        print('/'*88)
         try:
-            cuttingevent = instance.cut_product
-            cuttingevent.quantity_cut -= instance.quantity_sold
-            cuttingevent.quantity_sold += instance.quantity_sold
-            cuttingevent.save()
 
-            pr_production = cuttingevent.product_production
+            pr_production = instance.cut_product
             pr_production.total_cut -= instance.quantity_sold
             pr_production.total_sold += instance.quantity_sold
             pr_production.save()
@@ -497,12 +494,8 @@ def sales_create(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=SalesEvent)
 def sales_delete(sender, instance, **kwargs):
     try:
-        cuttingevent = instance.cut_product
-        cuttingevent.quantity_cut += instance.quantity_sold
-        cuttingevent.quantity_sold -= instance.quantity_sold
-        cuttingevent.save()
 
-        pr_production = cuttingevent.product_production
+        pr_production = instance.cut_product
         pr_production.total_cut += instance.quantity_sold
         pr_production.total_sold -= instance.quantity_sold
         pr_production.save()

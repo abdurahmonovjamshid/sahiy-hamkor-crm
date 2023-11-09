@@ -134,11 +134,12 @@ class ProductProduction(models.Model):
     class Meta:
         verbose_name = 'Tovar '
         verbose_name_plural = 'Ishlab Chiqarilgan Tovarlar'
+        # ordering = ['-production_date']
 
     def __str__(self):
         local_production_date = timezone.localtime(self.production_date)
         formatted_date = local_production_date.strftime('%D, %H:%M')
-        return f'{self.series}-{self.product} ({self.quantity} dona) ({formatted_date})'
+        return f'{self.series}-{self.product} ({self.total_cut} dona kesilgan) ({self.quantity} dona) ({formatted_date})'
 
 
 class Warehouse(models.Model):
@@ -189,15 +190,15 @@ class CuttingEvent(models.Model):
     is_complete = models.BooleanField(
         default=False, verbose_name='Seriyadagi mahsulot kesib bo\'lindi')
 
-    quantity_sold = models.PositiveIntegerField(
-        verbose_name="Sotilganlar soni", default=0)
-
     def clean(self):
         super().clean()
-        if self.product_production:
+        if self.product_production_id:
             if self.quantity_cut > self.product_production.quantity:
                 raise ValidationError(
                     "Kesilgan qiymat ishlab chiqarilgan qiymatdan oshib ketdi")
+        else:
+            raise ValidationError(
+                "xatolik")
 
     def __str__(self):
         return f"{self.quantity_cut} cut from {self.product_production.series}-{self.product_production.product}"
@@ -240,12 +241,12 @@ class SalesEvent(models.Model):
     def clean(self):
         super().clean()
         if self.cut_product:
-            if self.quantity_sold > self.cut_product.quantity_cut:
+            if self.quantity_sold > self.cut_product.total_cut:
                 raise ValidationError(
                     "sotilgan qiymat kesilgan qiymatdan oshib ketdi")
 
     def save(self, *args, **kwargs):
-        self.single_sold_price = self.cut_product.product_production.product.price
+        self.single_sold_price = self.cut_product.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
         super().save(*args, **kwargs)
 
@@ -255,7 +256,7 @@ class SalesEvent(models.Model):
         unique_together = ['cut_product', 'sales']
 
     def __str__(self):
-        return str(self.quantity_sold)+' ta '+self.cut_product.product_production.product.name
+        return str(self.quantity_sold)+' ta '+self.cut_product.product.name
 
 
 class SalesEvent2(models.Model):

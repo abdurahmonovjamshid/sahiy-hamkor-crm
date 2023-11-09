@@ -220,12 +220,12 @@ class ProductAdmin(admin.ModelAdmin):
 
 class ProductProductionAdmin(admin.ModelAdmin):
     list_display = ('series', 'product', 'quantity', 'total_cut',
-                    'total_sold', 'user', 'production_date')
+                    'total_sold', 'cutting_complate', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date', 'series')
-    readonly_fields = ('user', 'total_cut', 'total_sold', 'production_date')
+    readonly_fields = ('user', 'total_cut', 'total_sold',
+                       'production_date', 'cutting_complate')
     # exclude = ['cutting_complate']
     date_hierarchy = 'production_date'
-    ordering = ('-production_date',)
     change_list_template = 'admin/production_change_list.html'
 
     def save_model(self, request, obj, form, change):
@@ -304,9 +304,8 @@ class CuttingEventInline(admin.TabularInline):
     model = CuttingEvent
     extra = 1
     fields = ('product_production', 'quantity_cut',
-              'is_complete', 'quantity_sold')
+              'is_complete',)
     autocomplete_fields = ('product_reproduction',)
-    readonly_fields = ('quantity_sold',)
 
 
 class ProductReProductionAdmin(admin.ModelAdmin):
@@ -316,19 +315,19 @@ class ProductReProductionAdmin(admin.ModelAdmin):
     search_fields = ['user__username']
     list_filter = ['user', 're_production_date']
     date_hierarchy = 're_production_date'
-    readonly_fields = ('user',)
+    readonly_fields = ('user','re_production_date')
 
     change_list_template = 'admin/reproduction_change_list.html'
 
     def get_cutting_events(self, obj):
         cutting_events = obj.cutting.all()
-        return ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' + cutting_event.product_production.product.name) for cutting_event in cutting_events)
+        return ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' + cutting_event.product_production.product.name) for cutting_event in cutting_events)
     get_cutting_events.short_description = 'Kesilgan  mahsulotlar'
 
     def total_cut(self, obj):
         total_cut = 0
         for cuttingevent in obj.cutting.all():
-            total_cut += cuttingevent.quantity_cut + cuttingevent.quantity_sold
+            total_cut += cuttingevent.quantity_cut
         return total_cut
 
     total_cut.short_description = 'Umumiy kesilganlar'
@@ -336,8 +335,7 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.annotate(total_cut=Sum(
-            F('cutting__quantity_cut') + F('cutting__quantity_sold')))
+        queryset = queryset.annotate(total_cut=Sum('cutting__quantity_cut'))
         return queryset
 
     def save_model(self, request, obj, form, change):
@@ -354,9 +352,6 @@ class SalesEventInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ('sales',)
     readonly_fields = ('single_sold_price', 'total_sold_price')
-
-    def label_from_instance(self, obj):
-        return f"{obj.cut_product.series}-{obj.cut_product.product} ({obj.cut_product.total_cut} dona)"
 
     def get_fields(self, request, obj=None):
         fields = ('cut_product', 'quantity_sold',
