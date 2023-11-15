@@ -236,7 +236,7 @@ def export_reproduction_excel(request):
     # Write data rows
     for reproduction in queryset:
         cutting_events = reproduction.cutting.all()
-        events = ", ".join(str(str(cutting_event.quantity_cut+cutting_event.quantity_sold) + ' ta ' +
+        events = ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' +
                            cutting_event.product_production.product.name) for cutting_event in cutting_events)
         total_cut = 0
         for cuttingevent in reproduction.cutting.all():
