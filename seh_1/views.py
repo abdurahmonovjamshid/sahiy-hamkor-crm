@@ -154,7 +154,7 @@ def export_warehouse_excel(request):
 
 @login_required
 def export_production_excel(request):
-    queryset = ProductProduction.objects.all()
+    queryset = ProductProduction.objects.filter(parent__isnull=True)
 
     # Create a new workbook
     workbook = Workbook()
@@ -377,8 +377,13 @@ def subtract_component_total(sender, instance, created, **kwargs):
 
                         response = requests.post(url, json=message)
                         print(response.text)
+
             except Exception as e:
                 print(e)
+        if instance.parent:
+            parent = instance.parent
+            parent.quantity += instance.quantity
+            parent.save()
 
 
 @receiver(post_delete, sender=ProductProduction)
@@ -395,6 +400,13 @@ def delete_component_total(sender, instance, **kwargs):
         component = product_component.component
         component.total += total_quantity_by_component
         component.save()
+    try:
+        if instance.parent:
+            parent = instance.parent
+            parent.quantity -= instance.quantity
+            parent.save()
+    except:
+        pass
 
 
 @receiver(post_save, sender=Warehouse)
