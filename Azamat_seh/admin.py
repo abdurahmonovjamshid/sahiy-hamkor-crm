@@ -197,7 +197,7 @@ class WarehouseAdmin(admin.ModelAdmin):
     ordering = ('-arrival_time',)
     exclude = ('user', 'price')
 
-    change_list_template = 'admin/warehouse_change_list.html'
+    # change_list_template = 'admin/warehouse_change_list.html'
 
     def get_list_display(self, request):
         if request.user.is_superuser:
@@ -269,7 +269,7 @@ class SalesAdmin(admin.ModelAdmin):
     # readonly_fields = ('seller',)
     exclude = ('user',)
 
-    change_list_template = 'admin/sales_change_list.html'
+    # change_list_template = 'admin/sales_change_list.html'
 
     def get_list_display(self, request):
         if request.user.is_superuser:

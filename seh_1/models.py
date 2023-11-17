@@ -141,7 +141,7 @@ class ProductProduction(MPTTModel):
         ordering = ['-production_date']
 
     def __str__(self):
-        return f'{self.series}-{self.product}'
+        return f'{self.series}-{self.product} ({self.quantity} dona kesilmagan)({self.total_cut} dona kesilgan)'
 
     def clean(self):
         super().clean()
