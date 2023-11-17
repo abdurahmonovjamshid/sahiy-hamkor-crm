@@ -141,7 +141,7 @@ class ProductAdmin(admin.ModelAdmin):
     get_total_sold_price.short_description = "Sotilgan tovar narxi"
     get_total_sold_price.admin_order_field = 'total_sold_price'
 
-    change_list_template = 'admin/product_change_list.html'
+    # change_list_template = 'admin/product_change_list.html'
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
@@ -169,7 +169,6 @@ class ProductProductionAdmin(admin.ModelAdmin):
     readonly_fields = ('user', 'production_date')
     date_hierarchy = 'production_date'
     # change_list_template = 'admin/production_change_list.html'
-
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:
@@ -250,7 +249,7 @@ class SalesEventInline(admin.TabularInline):
     readonly_fields = ('single_sold_price', 'total_sold_price')
 
     def get_fields(self, request, obj=None):
-        fields = ('cut_product', 'quantity_sold',
+        fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price')
 
         # Check if the user is a superuser
@@ -275,16 +274,15 @@ class SalesAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ['buyer', 'seller',
-                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'user', 'date']
+                    'get_sales_events', 'get_total_price', 'user', 'date']
         else:
             return ['buyer', 'seller',
-                    'get_sales_events_user', 'get_sales_event2s_user', 'user', 'date']
+                    'get_sales_events_user', 'user', 'date']
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            total_price=Sum('selling_cut__total_sold_price') +
-            Sum('selling__total_sold_price')
+            total_price=Sum('selling_cut__total_sold_price')
         )
         return queryset
 
@@ -292,9 +290,7 @@ class SalesAdmin(admin.ModelAdmin):
         sales_events = obj.selling_cut.all()
         total_price = sum(event.total_sold_price for event in sales_events)
 
-        sales_events2 = obj.selling.all()
-        total_price2 = sum(event.total_sold_price for event in sales_events2)
-        formatted_price = "{:,.1f}".format(total_price + total_price2)
+        formatted_price = "{:,.1f}".format(total_price)
         return formatted_price+'$'
 
     get_total_price.short_description = 'Narx'
@@ -311,18 +307,6 @@ class SalesAdmin(admin.ModelAdmin):
         return ", ".join(str(sale_event) for sale_event in sales_events)
 
     get_sales_events_user.short_description = 'Kesilgan mahsulotlar'
-
-    def get_sales_event2s(self, obj):
-        sales_event2s = obj.selling.all()
-        return ", ".join(str(sale_event2)+f' ({sale_event2.single_sold_price}$ dan)' for sale_event2 in sales_event2s)
-
-    get_sales_event2s.short_description = 'Kesilmagan mahsulotlar'
-
-    def get_sales_event2s_user(self, obj):
-        sales_event2s = obj.selling.all()
-        return ", ".join(str(sale_event2) for sale_event2 in sales_event2s)
-
-    get_sales_event2s_user.short_description = 'Kesilmagan mahsulotlar'
 
     def save_model(self, request, obj, form, change):
         # Set the current logged-in user as the seller

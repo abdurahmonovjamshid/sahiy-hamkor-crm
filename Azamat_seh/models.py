@@ -57,10 +57,12 @@ class Product(models.Model):
         default=0, verbose_name="Ishlab chiqarilganlar soni")
     total_sold = models.IntegerField(
         default=0, verbose_name="Sotilganlar soni")
+    total_sold_price = models.FloatField(
+        verbose_name='Umumiy sotilgan narxi', default=0)
 
     class Meta:
-        verbose_name = 'Produkt '
-        verbose_name_plural = 'Produktlar'
+        verbose_name = 'Tovar '
+        verbose_name_plural = 'Tovarlar'
 
     def __str__(self):
         return self.name
@@ -165,8 +167,8 @@ class SalesEvent(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = 'Kesilgan mahsulot'
-        verbose_name_plural = 'Kesilgan mahsulotlar'
+        verbose_name = 'Mahsulot'
+        verbose_name_plural = 'Mahsulotlar'
         unique_together = ['product', 'sales']
 
     def __str__(self):
