@@ -95,7 +95,7 @@ class ProductProduction(models.Model):
 
     class Meta:
         verbose_name = 'Tovar '
-        verbose_name_plural = 'Ishlab Chiqarilgan Tovarlar'
+        verbose_name_plural = 'Tovarlar Ishlab Chiqarish'
         ordering = ['-production_date']
 
     def __str__(self):
