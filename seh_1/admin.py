@@ -224,14 +224,19 @@ class ProductProductionAdmin(DraggableMPTTAdmin):
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
 
-    list_display = ('tree_actions', 'indented_title', 'quantity', 'get_total_cut',
+    list_display = ('tree_actions', 'get_title', 'quantity', 'get_total_cut',
                     'get_total_sold', 'cutting_complate', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date', 'series')
     readonly_fields = ('user', 'total_cut', 'total_sold',
                        'production_date', 'cutting_complate')
     # exclude = ['cutting_complate']
     date_hierarchy = 'production_date'
+    list_display_links = ('get_title',)
     change_list_template = 'admin/production_change_list.html'
+
+    def get_title(self, instance):
+        return f'{instance.series}-{instance.product}'
+    get_title.short_description = 'Title'
 
     def get_total_cut(self, obj):
         if obj.parent:
