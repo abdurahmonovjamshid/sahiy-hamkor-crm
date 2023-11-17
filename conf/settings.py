@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mptt',
     'seh_1',
-    'Anvaraka_sklad'
+    'Anvaraka_sklad',
+    'Azamat_seh',
 ]
 
 LOGIN_URL = '/admin/login/'
@@ -144,22 +145,32 @@ JAZZMIN_SETTINGS = {
             "new_window": True},
         {"model": "auth.User"},
         {"app": "seh_1"},
+        {"app": "Azamat_seh"},
         {"app": "Anvaraka_sklad"},
 
     ],
     "show_sidebar": True,
-    "order_with_respect_to": ["auth", "seh_1", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", "seh_1.warehouse", 'seh_1.productreproduction', "Anvaraka_sklad.product", "Anvaraka_sklad.warehouse", "Anvaraka_sklad.selling",],
+    "order_with_respect_to": ["auth", "seh_1", "Azamat_Seh", "seh_1.component", "seh_1.product", "seh_1.warehouse", "seh_1.productproduction", 'seh_1.productreproduction',
+                              'Azamat_Seh.component', 'Azamat_Seh.product', 'Azamat_Seh.warehouse', 'Azamat_Seh.productproduction', 'Azamat_Seh.sales',
+                              "Anvaraka_sklad.product", "Anvaraka_sklad.warehouse", "Anvaraka_sklad.selling",],
 
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+
         "seh_1.component": "fas fa-cubes",
         "seh_1.product": "fas fa-shopping-bag",
         "seh_1.productproduction": "fas fa-industry",
         "seh_1.warehouse": "fas fa-warehouse",
         "seh_1.productreproduction": "fas fa-cut",
         "seh_1.sales": "fas fa-shopping-cart",
+
+        "Azamat_Seh.component": "fas fa-cubes",
+        "Azamat_Seh.product": "fas fa-shopping-bag",
+        "Azamat_Seh.productproduction": "fas fa-industry",
+        "Azamat_Seh.warehouse": "fas fa-warehouse",
+        "Azamat_Seh.sales": "fas fa-shopping-cart",
 
         "Anvaraka_sklad.product": "fas fa-cubes",
         "Anvaraka_sklad.warehouse": "fas fa-warehouse",
