@@ -112,7 +112,11 @@ class ProductComponent(models.Model):
         return f'({self.quantity} {self.component.get_measurement_display()})'
 
 
-class ProductProduction(models.Model):
+class ProductProduction(MPTTModel):
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, verbose_name="Bo'limlar",
+                               limit_choices_to={'parent__isnull': True},
+                               related_name='children', null=True, blank=True, )
+
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, verbose_name='xodim', null=True, blank=True)
 
@@ -126,7 +130,7 @@ class ProductProduction(models.Model):
         default=0, verbose_name="sotilganlar soni")
 
     cutting_complate = models.BooleanField(
-        default=False, verbose_name='ishlab chiqarilgan maxsulotni kesish yakunlandi')
+        default=False, verbose_name='kesish yakunlandi')
 
     production_date = models.DateTimeField(
         auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
@@ -134,12 +138,17 @@ class ProductProduction(models.Model):
     class Meta:
         verbose_name = 'Tovar '
         verbose_name_plural = 'Ishlab Chiqarilgan Tovarlar'
-        # ordering = ['-production_date']
+        ordering = ['-production_date']
 
     def __str__(self):
-        local_production_date = timezone.localtime(self.production_date)
-        formatted_date = local_production_date.strftime('%D, %H:%M')
-        return f'{self.series}-{self.product} ({self.total_cut} dona kesilgan) ({self.quantity} dona) ({formatted_date})'
+        return f'{self.series}-{self.product}'
+
+    def clean(self):
+        super().clean()
+        if self.parent_id:
+            if self.parent.product.id != self.product.id:
+                raise ValidationError(
+                    "Bo'lim va tanlangan product mos emas")
 
 
 class Warehouse(models.Model):
@@ -182,7 +191,7 @@ class ProductReProduction(models.Model):
 
 class CuttingEvent(models.Model):
     product_production = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, 'cutting_complate': False}, verbose_name='Tovar')
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, 'cutting_complate': False, 'parent__isnull': True}, verbose_name='Tovar')
     quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
@@ -227,7 +236,7 @@ class Sales(models.Model):
 
 class SalesEvent(models.Model):
     cut_product = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut__gt': 0})
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut__gt': 0, 'parent__isnull': True})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
@@ -261,7 +270,7 @@ class SalesEvent(models.Model):
 
 class SalesEvent2(models.Model):
     non_cut_product = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, })
+        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, 'parent__isnull': True})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(

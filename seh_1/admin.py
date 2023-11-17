@@ -218,15 +218,31 @@ class ProductAdmin(admin.ModelAdmin):
         return response
 
 
-class ProductProductionAdmin(admin.ModelAdmin):
-    list_display = ('series', 'product', 'quantity', 'total_cut',
-                    'total_sold', 'cutting_complate', 'user', 'production_date')
+class ProductProductionAdmin(DraggableMPTTAdmin):
+    mptt_indent_field = "series"
+    autocomplete_fields = ('parent',)
+    search_fields = ('title',)
+
+    list_display = ('tree_actions', 'indented_title', 'quantity', 'get_total_cut',
+                    'get_total_sold', 'cutting_complate', 'user', 'production_date')
     list_filter = ('user', 'product', 'production_date', 'series')
     readonly_fields = ('user', 'total_cut', 'total_sold',
                        'production_date', 'cutting_complate')
     # exclude = ['cutting_complate']
     date_hierarchy = 'production_date'
     change_list_template = 'admin/production_change_list.html'
+
+    def get_total_cut(self, obj):
+        if obj.parent:
+            return '-'
+        else:
+            return obj.total_cut
+
+    def get_total_sold(self, obj):
+        if obj.parent:
+            return '-'
+        else:
+            return obj.total_sold
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:
@@ -315,7 +331,7 @@ class ProductReProductionAdmin(admin.ModelAdmin):
     search_fields = ['user__username']
     list_filter = ['user', 're_production_date']
     date_hierarchy = 're_production_date'
-    readonly_fields = ('user','re_production_date')
+    readonly_fields = ('user', 're_production_date')
 
     change_list_template = 'admin/reproduction_change_list.html'
 
