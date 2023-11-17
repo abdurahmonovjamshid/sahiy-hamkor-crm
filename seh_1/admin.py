@@ -219,6 +219,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class ProductProductionAdmin(DraggableMPTTAdmin):
+    actions = None
     mptt_indent_field = "series"
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
