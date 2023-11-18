@@ -90,7 +90,7 @@ class ProductProduction(models.Model):
         User, on_delete=models.SET_NULL, verbose_name='xodim', null=True, blank=True, related_name='production')
 
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, verbose_name='Produkt')
+        Product, on_delete=models.CASCADE, verbose_name='Produkt', limit_choices_to={'parent__isnull': False})
     quantity = models.PositiveIntegerField(verbose_name="Kesilmaganlar soni")
 
     production_date = models.DateTimeField(

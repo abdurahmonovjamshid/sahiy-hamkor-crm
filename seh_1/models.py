@@ -114,7 +114,8 @@ class ProductComponent(models.Model):
 
 class ProductProduction(MPTTModel):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, verbose_name="Bo'limlar",
-                               limit_choices_to={'parent__isnull': True},
+                               limit_choices_to={
+                                   'parent__isnull': True, 'cutting_complate': False, },
                                related_name='children', null=True, blank=True, )
 
     user = models.ForeignKey(
