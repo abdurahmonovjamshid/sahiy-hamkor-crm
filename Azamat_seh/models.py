@@ -49,7 +49,10 @@ class Component(MPTTModel):
         return False
 
 
-class Product(models.Model):
+class Product(MPTTModel):
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, verbose_name="Bo'limlar",
+                               limit_choices_to={'parent__isnull': True},
+                               related_name='children', null=True, blank=True, )
     name = models.CharField(max_length=100, verbose_name='Nomi')
     price = models.FloatField(verbose_name='Sotuv narxi')
 

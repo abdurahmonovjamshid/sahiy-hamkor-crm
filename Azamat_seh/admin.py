@@ -66,7 +66,11 @@ class ProductComponentInline(admin.TabularInline):
     verbose_name = 'komponent'
 
 
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(DraggableMPTTAdmin):
+    mptt_indent_field = "name"
+    list_filter = ('parent',)
+    autocomplete_fields = ('parent',)
+    search_fields = ('name',)
     inlines = [ProductComponentInline]
     list_filter = ['name']
     search_fields = ('name',)
@@ -74,7 +78,7 @@ class ProductAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
-                'fields': ('name', 'price', 'total_new', 'total_sold', 'total_sold_price'),
+                'fields': ('parent', 'name', 'price', 'total_new', 'total_sold', 'total_sold_price'),
             }),
         )
         if not request.user.is_superuser:
@@ -86,40 +90,66 @@ class ProductAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('name', 'tannarx', 'get_price', 'total_new',
-                    'total_sold', 'non_sold_price', 'get_total_sold_price', 'profit')
+            return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new',
+                    'get_total_sold', 'non_sold_price', 'get_total_sold_price', 'profit')
         else:
-            return ('name', 'total_new',
-                    'total_sold')
+            return ('tree_actions', 'indented_title', 'get_total_new',
+                    'get_total_sold')
+
+    def get_total_new(self, obj):
+        if obj.parent:
+            return obj.total_new
+        else:
+            return '-'
+    get_total_new.short_description = 'Ishlab chiqarilganlar soni'
+
+    def get_total_sold(self, obj):
+        if obj.parent:
+            return obj.total_new
+        else:
+            return '-'
+    get_total_sold.short_description = 'Sotilganlar soni'
 
     def profit(self, obj):
-        product_price = 0
-        for productcomponent in obj.productcomponent_set.all():
-            product_price += productcomponent.quantity*productcomponent.component.price
-        product_price = 1.18*product_price
+        if obj.parent:
+            product_price = 0
+            for productcomponent in obj.productcomponent_set.all():
+                product_price += productcomponent.quantity*productcomponent.component.price
+            product_price = 1.18*product_price
 
-        formatted_price = "{:,.1f}".format(
-            obj.total_sold_price - (product_price*obj.total_sold))
-        return formatted_price + '$'
+            formatted_price = "{:,.1f}".format(
+                obj.total_sold_price - (product_price*obj.total_sold))
+            return formatted_price + '$'
+        else:
+            return '-'
     profit.short_description = 'Foyda'
 
     def get_price(self, obj):
-        return str(obj.price)+'$'
+        if obj.parent:
+            return str(obj.price)+'$'
+        else:
+            return '-'
     get_price.short_description = 'Sotuv narxi'
     get_price.admin_order_field = 'price'
 
     def non_sold_price(self, obj):
-        formatted_price = "{:,.1f}".format(
-            obj.price*(obj.total_new))
-        return formatted_price+'$'
+        if obj.parent:
+            formatted_price = "{:,.1f}".format(
+                obj.price*(obj.total_new))
+            return formatted_price+'$'
+        else:
+            return '-'
     non_sold_price.short_description = 'Mavjud tovar narxi'
     non_sold_price.admin_order_field = 'non_sold_price'
 
     def tannarx(self, obj):
-        product_price = 0
-        for productcomponent in obj.productcomponent_set.all():
-            product_price += productcomponent.quantity*productcomponent.component.price
-        return "{:,.1f}".format(product_price*1.18)+'$'
+        if obj.parent:
+            product_price = 0
+            for productcomponent in obj.productcomponent_set.all():
+                product_price += productcomponent.quantity*productcomponent.component.price
+            return "{:,.1f}".format(product_price*1.18)+'$'
+        else:
+            return '-'
     tannarx.short_description = 'Tan narxi'
     tannarx.admin_order_field = 'single_product_price'
 
@@ -136,8 +166,11 @@ class ProductAdmin(admin.ModelAdmin):
         return queryset
 
     def get_total_sold_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.total_sold_price)
-        return formatted_price+'$'
+        if obj.parent:
+            formatted_price = "{:,.1f}".format(obj.total_sold_price)
+            return formatted_price+'$'
+        else:
+            return '-'
     get_total_sold_price.short_description = "Sotilgan tovar narxi"
     get_total_sold_price.admin_order_field = 'total_sold_price'
 
