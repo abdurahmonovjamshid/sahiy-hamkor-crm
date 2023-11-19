@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     # Existing URL patterns ...
-    path('product/export-excel/', views.component_export_excel,
+    path('product/component-export-excel/', views.component_export_excel,
          name='component_export_excel'),
     path('product/export-excel/', views.export_excel,
          name='product_export_excel'),
