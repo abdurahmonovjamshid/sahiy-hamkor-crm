@@ -73,6 +73,19 @@ class ComponentAdmin(DraggableMPTTAdmin):
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            ('Umumiy malumot', {
+                'fields': ('parent', 'title', 'price', 'measurement', 'total', 'notification_limit'),
+            }),
+        )
+        if not request.user.is_superuser:
+            print('/'*88)
+            price_fields = ('price', )
+            fieldsets[0][1]['fields'] = tuple(
+                field for field in fieldsets[0][1]['fields'] if field not in price_fields)
+        return fieldsets
+
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('tree_actions', 'indented_title',
@@ -83,7 +96,9 @@ class ComponentAdmin(DraggableMPTTAdmin):
 
     def get_total_price(self, obj):
         if not obj.parent:
-            return '-'
+            total_child_price = obj.children.annotate(total_price=F(
+                'price') * F('total')).aggregate(total=Sum('total_price'))['total']
+            return "{:,.2f}".format(total_child_price).rstrip("0").rstrip(".")
         formatted_price = "{:,.2f}".format(
             obj.total * obj.price).rstrip("0").rstrip(".")
         return formatted_price+'$'
@@ -443,7 +458,8 @@ class SalesAdmin(admin.ModelAdmin):
 
         sales_events2 = obj.selling.all()
         total_price2 = sum(event.total_sold_price for event in sales_events2)
-        formatted_price = "{:,.2f}".format(total_price + total_price2).rstrip("0").rstrip(".")
+        formatted_price = "{:,.2f}".format(
+            total_price + total_price2).rstrip("0").rstrip(".")
         return formatted_price+'$'
 
     get_total_price.short_description = 'Narx'
