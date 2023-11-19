@@ -16,7 +16,62 @@ from conf import settings
 
 from .models import (CuttingEvent, Product, ProductProduction,
                      ProductReProduction, Sales, SalesEvent, SalesEvent2,
-                     Warehouse)
+                     Warehouse, Component)
+
+
+@login_required
+def component_export_excel(request):
+    components = Component.objects.exclude(parent=None)
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        components = components.filter(Q(name__icontains=search_query))
+
+    # Apply filters based on request parameters
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+
+    if filters:
+        components = components.filter(**filters)
+
+    # Write headers
+    headers = ['Bo\'lim', 'Nomi', 'Narxi', 'O\'lchov birligi', 'Umumiy']
+    worksheet.append(headers)
+
+    # Write data rows
+    for component in components:
+        row = [
+            component.parent.title,
+            component.title,
+            str(component.price)+'$',
+            component.measurement,
+            component.total,
+        ]
+        worksheet.append(row)
+
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=component.xlsx'
+
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
+    worksheet.column_dimensions['C'].width = 20
+    worksheet.column_dimensions['D'].width = 20
+    worksheet.column_dimensions['E'].width = 20
+    worksheet.column_dimensions['F'].width = 20
+    worksheet.column_dimensions['G'].width = 20
+    worksheet.column_dimensions['H'].width = 20
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
 
 
 @login_required

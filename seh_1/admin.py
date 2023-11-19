@@ -73,6 +73,23 @@ class ComponentAdmin(DraggableMPTTAdmin):
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
 
+    change_list_template = 'admin/component_change_list.html'
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        queryset = self.get_queryset(request)
+        total_price = queryset.aggregate(total_price=Sum(F('price')*F('total')))[
+            'total_price'] or 0
+        formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")
+
+        try:
+            response.context_data[
+                'summary_line'] = f"Mavjud komponent narxi: {formatted_price}$"
+        except:
+            pass
+        return response
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
