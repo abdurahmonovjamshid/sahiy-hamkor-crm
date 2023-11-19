@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.auth.models import User
-from django.db.models import F, Sum
+from django.db.models import F,  Sum
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -30,7 +30,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
         if not obj.parent:
             return '-'
         formatted_price = "{:,.1f}".format(obj.total * obj.price)
-        return formatted_price+'$'
+        return formatted_price+' sum'
 
     get_total_price.short_description = 'Mavjud komponent narxi'
 
@@ -38,7 +38,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
         if not obj.parent:
             return '-'
         formatted_price = "{:,.1f}".format(obj.price)
-        return formatted_price+'$'
+        return formatted_price+' sum'
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
 
@@ -119,14 +119,14 @@ class ProductAdmin(DraggableMPTTAdmin):
 
             formatted_price = "{:,.1f}".format(
                 obj.total_sold_price - (product_price*obj.total_sold))
-            return formatted_price + '$'
+            return formatted_price + ' sum'
         else:
             return '-'
     profit.short_description = 'Foyda'
 
     def get_price(self, obj):
         if obj.parent:
-            return str(obj.price)+'$'
+            return str(obj.price)+' sum'
         else:
             return '-'
     get_price.short_description = 'Sotuv narxi'
@@ -136,7 +136,7 @@ class ProductAdmin(DraggableMPTTAdmin):
         if obj.parent:
             formatted_price = "{:,.1f}".format(
                 obj.price*(obj.total_new))
-            return formatted_price+'$'
+            return formatted_price+' sum'
         else:
             return '-'
     non_sold_price.short_description = 'Mavjud tovar narxi'
@@ -147,7 +147,7 @@ class ProductAdmin(DraggableMPTTAdmin):
             product_price = 0
             for productcomponent in obj.productcomponent_set.all():
                 product_price += productcomponent.quantity*productcomponent.component.price
-            return "{:,.1f}".format(product_price*1.18)+'$'
+            return "{:,.1f}".format(product_price*1.18)+' sum'
         else:
             return '-'
     tannarx.short_description = 'Tan narxi'
@@ -156,11 +156,11 @@ class ProductAdmin(DraggableMPTTAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            single_product_price=Sum(
+            single_product_price= Sum(
                 F('productcomponent__quantity') * F('productcomponent__component__price')*1.18)
         )
         queryset = queryset.annotate(
-            non_sold_price=Sum(
+            non_sold_price= Sum(
                 F('price') * F('total_new'))
         )
         return queryset
@@ -168,7 +168,7 @@ class ProductAdmin(DraggableMPTTAdmin):
     def get_total_sold_price(self, obj):
         if obj.parent:
             formatted_price = "{:,.1f}".format(obj.total_sold_price)
-            return formatted_price+'$'
+            return formatted_price+' sum'
         else:
             return '-'
     get_total_sold_price.short_description = "Sotilgan tovar narxi"
@@ -180,17 +180,17 @@ class ProductAdmin(DraggableMPTTAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
+        total_price = queryset.aggregate(total_price= Sum('total_sold_price'))[
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
-        total_product_price = queryset.aggregate(total_product_price=Sum(F('total_new')*F('price')))[
+        total_product_price = queryset.aggregate(total_product_price= Sum(F('total_new')*F('price')))[
             'total_product_price'] or 0
         formatted_pr_price = "{:,.1f}".format(total_product_price)
 
         try:
             response.context_data[
-                'summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price}$<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price}$"
+                ' summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price} sum<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price} sum"
         except:
             pass
         return response
@@ -242,19 +242,19 @@ class WarehouseAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price=Sum('price'))[
+        total_price = queryset.aggregate(total_price= Sum('price'))[
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
         try:
-            response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
+            response.context_data[' summary_line'] = f"Umumiy narx: {formatted_price}"
         except:
             pass
         return response
 
     def get_price(self, obj):
         formatted_price = "{:,.1f}".format(obj.price)
-        return formatted_price+'$'
+        return formatted_price+' sum'
 
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -315,23 +315,23 @@ class SalesAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            total_price=Sum('selling_cut__total_sold_price')
+            total_price= Sum('selling_cut__total_sold_price')
         )
         return queryset
 
     def get_total_price(self, obj):
         sales_events = obj.selling_cut.all()
-        total_price = sum(event.total_sold_price for event in sales_events)
+        total_price =  sum(event.total_sold_price for event in sales_events)
 
         formatted_price = "{:,.1f}".format(total_price)
-        return formatted_price+'$'
+        return formatted_price+' sum'
 
     get_total_price.short_description = 'Narx'
     get_total_price.admin_order_field = 'total_price'
 
     def get_sales_events(self, obj):
         sales_events = obj.selling_cut.all()
-        return ", ".join(str(sale_event)+f' ({sale_event.single_sold_price}$ dan)' for sale_event in sales_events)
+        return ", ".join(str(sale_event)+f' ({sale_event.single_sold_price} sum dan)' for sale_event in sales_events)
 
     get_sales_events.short_description = 'Kesilgan mahsulotlar'
 

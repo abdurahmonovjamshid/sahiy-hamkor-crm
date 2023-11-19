@@ -84,7 +84,8 @@ class ComponentAdmin(DraggableMPTTAdmin):
     def get_total_price(self, obj):
         if not obj.parent:
             return '-'
-        formatted_price = "{:,.1f}".format(obj.total * obj.price)
+        formatted_price = "{:,.2f}".format(
+            obj.total * obj.price).rstrip("0").rstrip(".")
         return formatted_price+'$'
 
     get_total_price.short_description = 'Mavjud komponent narxi'
@@ -92,7 +93,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
     def get_price(self, obj):
         if not obj.parent:
             return '-'
-        formatted_price = "{:,.1f}".format(obj.price)
+        formatted_price = "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")
         return formatted_price+'$'
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -104,7 +105,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
                     '<span style="background-color:#FF0E0E; color:white; padding: 2px 5px;">{}</span>',
                     str(obj.total)+' '+obj.measurement
                 )
-            return str(obj.total)+' '+obj.measurement
+            return "{:,.1f}".format(obj.total).rstrip("0").rstrip(".")+' '+obj.measurement
         elif not obj.parent and obj.highlight:
             return format_html('<span style="background-color:#FF0E0E; color:white; padding: 2px 10px;">-</span>')
 
@@ -153,19 +154,19 @@ class ProductAdmin(admin.ModelAdmin):
             product_price += productcomponent.quantity*productcomponent.component.price
         product_price = 1.18*product_price
 
-        formatted_price = "{:,.1f}".format(
+        formatted_price = "{:,.2f}".format(
             obj.total_sold_price - (product_price*obj.total_sold))
         return formatted_price + '$'
     profit.short_description = 'Foyda'
 
     def get_price(self, obj):
-        return str(obj.price)+'$'
+        return "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")+'$'
     get_price.short_description = 'Sotuv narxi'
     get_price.admin_order_field = 'price'
 
     def non_sold_price(self, obj):
-        formatted_price = "{:,.1f}".format(
-            obj.price*(obj.total_new+obj.total_cut))
+        formatted_price = "{:,.2f}".format(
+            obj.price*(obj.total_new+obj.total_cut)).rstrip("0").rstrip(".")
         return formatted_price+'$'
     non_sold_price.short_description = 'Mavjud tovar narxi'
     non_sold_price.admin_order_field = 'non_sold_price'
@@ -174,7 +175,7 @@ class ProductAdmin(admin.ModelAdmin):
         product_price = 0
         for productcomponent in obj.productcomponent_set.all():
             product_price += productcomponent.quantity*productcomponent.component.price
-        return "{:,.1f}".format(product_price*1.18)+'$'
+        return "{:,.2f}".format(product_price*1.18)+'$'
     tannarx.short_description = 'Tan narxi'
     tannarx.admin_order_field = 'single_product_price'
 
@@ -191,7 +192,8 @@ class ProductAdmin(admin.ModelAdmin):
         return queryset
 
     def get_total_sold_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.total_sold_price)
+        formatted_price = "{:,.2f}".format(
+            obj.total_sold_price).rstrip("0").rstrip(".")
         return formatted_price+'$'
     get_total_sold_price.short_description = "Sotilgan tovar narxi"
     get_total_sold_price.admin_order_field = 'total_sold_price'
@@ -204,11 +206,12 @@ class ProductAdmin(admin.ModelAdmin):
         queryset = self.get_queryset(request)
         total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
             'total_price'] or 0
-        formatted_price = "{:,.1f}".format(total_price)
+        formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")
 
         total_product_price = queryset.aggregate(total_product_price=Sum((F('total_new') + F('total_cut'))*F('price')))[
             'total_product_price'] or 0
-        formatted_pr_price = "{:,.1f}".format(total_product_price)
+        formatted_pr_price = "{:,.2f}".format(
+            total_product_price).rstrip("0").rstrip(".")
 
         try:
             response.context_data[
@@ -291,7 +294,7 @@ class WarehouseAdmin(admin.ModelAdmin):
         queryset = self.get_queryset(request)
         total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
-        formatted_price = "{:,.1f}".format(total_price)
+        formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")
 
         try:
             response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
@@ -300,7 +303,7 @@ class WarehouseAdmin(admin.ModelAdmin):
         return response
 
     def get_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.price)
+        formatted_price = "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")
         return formatted_price+'$'
 
     get_price.short_description = 'Narxi'
@@ -440,7 +443,7 @@ class SalesAdmin(admin.ModelAdmin):
 
         sales_events2 = obj.selling.all()
         total_price2 = sum(event.total_sold_price for event in sales_events2)
-        formatted_price = "{:,.1f}".format(total_price + total_price2)
+        formatted_price = "{:,.2f}".format(total_price + total_price2).rstrip("0").rstrip(".")
         return formatted_price+'$'
 
     get_total_price.short_description = 'Narx'
