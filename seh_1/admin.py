@@ -290,12 +290,12 @@ class ProductProductionAdmin(DraggableMPTTAdmin):
             obj.user = request.user
         obj.save()
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        current_month = timezone.now().month
-        current_year = timezone.now().year
+    # def get_queryset(self, request):
+    #     qs = super().get_queryset(request)
+    #     current_month = timezone.now().month
+    #     current_year = timezone.now().year
 
-        return qs.filter(production_date__month=current_month, production_date__year=current_year)
+    #     return qs.filter(production_date__month=current_month, production_date__year=current_year)
 
     def has_change_permission(self, request, obj=None):
         return False
