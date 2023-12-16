@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from mptt.admin import DraggableMPTTAdmin
+from django.contrib import messages
 
 from .models import (Component, CuttingEvent, Product, ProductComponent,
                      ProductProduction, ProductReProduction, Sales, SalesEvent,
@@ -254,7 +255,23 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class ProductProductionAdmin(DraggableMPTTAdmin):
-    actions = None
+    actions = ['toggle_cutting_complete']
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        del actions['delete_selected']
+        return actions
+
+    def toggle_cutting_complete(self, request, queryset):
+        # Toggle the cutting_complate field for selected objects
+        updated_count = queryset.update(cutting_complate=~F('cutting_complate'))
+
+        # Display a success message
+        message = f"{updated_count} ProductProduction object(s) cutting completion toggled."
+        self.message_user(request, message, messages.SUCCESS)
+
+    toggle_cutting_complete.short_description = "Toggle cutting completion for selected objects"
+
     mptt_indent_field = "series"
     autocomplete_fields = ('parent',)
     search_fields = ('title',)
