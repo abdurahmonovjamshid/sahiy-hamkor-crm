@@ -4,8 +4,8 @@
     <div style="display: flex; justify-content: space-between; align-items: baseline;">
         <div></div>
         <div>   
-            {% url 'sales_export_excel' as export_url %}
-            <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
+            {% comment %} {% url 'sales_export_excel' as export_url %}
+            <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a> {% endcomment %}
         </div>
     </div>
     {% if currency_totals and request.user.is_superuser %}

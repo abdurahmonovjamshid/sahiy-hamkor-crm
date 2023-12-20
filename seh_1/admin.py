@@ -17,6 +17,8 @@ from .views import export_warehouse_excel
 
 
 class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'first_name',
+                    'last_name', 'is_staff', 'last_login')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -264,7 +266,8 @@ class ProductProductionAdmin(DraggableMPTTAdmin):
 
     def toggle_cutting_complete(self, request, queryset):
         # Toggle the cutting_complate field for selected objects
-        updated_count = queryset.update(cutting_complate=~F('cutting_complate'))
+        updated_count = queryset.update(
+            cutting_complate=~F('cutting_complate'))
 
         # Display a success message
         message = f"{updated_count} ProductProduction object(s) cutting completion toggled."

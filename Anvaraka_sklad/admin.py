@@ -202,6 +202,8 @@ class SalesInline(admin.TabularInline):
 
 
 class SellingAdmin(admin.ModelAdmin):
+    list_filter = ('sold_time', 'buyer', 'user')
+    date_hierarchy = 'sold_time'
     inlines = [SalesInline, SalesEventtInline]
     search_fields = ['buyer']
     exclude = ('user', 'sold_time')
@@ -210,9 +212,9 @@ class SellingAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('__str__', 'get_sold_products', 'get_paid', 'user', 'sold_time')
+            return ('buyer', 'get_sold_products', 'get_paid', 'user', 'sold_time')
         else:
-            return ('__str__', 'get_sold_products_user', 'user', 'sold_time')
+            return ('buyer', 'get_sold_products_user', 'user', 'sold_time')
 
     def get_sold_products(self, obj):
         sales = obj.sales_set.values(
