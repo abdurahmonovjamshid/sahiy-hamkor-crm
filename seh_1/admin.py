@@ -81,7 +81,10 @@ class ComponentAdmin(DraggableMPTTAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
+        # queryset = self.get_queryset(request)
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
+
         total_price = queryset.aggregate(total_price=Sum(F('price')*F('total')))[
             'total_price'] or 0
         formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")
@@ -238,7 +241,10 @@ class ProductAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
+        # queryset = self.get_queryset(request)
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
+
         total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
             'total_price'] or 0
         formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")
@@ -343,7 +349,11 @@ class WarehouseAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
+        # queryset = self.get_queryset(request)
+
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
+
         total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
         formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")

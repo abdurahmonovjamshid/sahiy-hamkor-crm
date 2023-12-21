@@ -123,7 +123,10 @@ class WarehouseAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
+        # queryset = self.get_queryset(request)
+
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
 
         # Calculate total prices for each currency
         currency_totals = queryset.values('component__currency').annotate(
@@ -233,7 +236,10 @@ class SellingAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
+        # queryset = self.get_queryset(request)
+
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
 
         # Calculate total prices for each currency
         currency_totals = queryset.values('sales__component__currency').annotate(

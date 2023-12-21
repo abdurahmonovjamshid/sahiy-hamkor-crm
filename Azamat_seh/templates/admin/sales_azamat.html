@@ -1,0 +1,20 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div></div>
+        <div>   
+            {% comment %} {% url 'sales_export_excel' as export_url %}
+            <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a> {% endcomment %}
+        </div>
+    </div>
+    {% if total and request.user.is_superuser %}
+        <div>
+            <h3>Umumiy sotuv narxi:</h3>
+            <ul>
+                <li>{{ total }}</li>
+            </ul>
+        </div>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

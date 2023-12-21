@@ -156,11 +156,11 @@ class ProductAdmin(DraggableMPTTAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            single_product_price= Sum(
+            single_product_price=Sum(
                 F('productcomponent__quantity') * F('productcomponent__component__price')*1.18)
         )
         queryset = queryset.annotate(
-            non_sold_price= Sum(
+            non_sold_price=Sum(
                 F('price') * F('total_new'))
         )
         return queryset
@@ -180,11 +180,11 @@ class ProductAdmin(DraggableMPTTAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price= Sum('total_sold_price'))[
+        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
-        total_product_price = queryset.aggregate(total_product_price= Sum(F('total_new')*F('price')))[
+        total_product_price = queryset.aggregate(total_product_price=Sum(F('total_new')*F('price')))[
             'total_product_price'] or 0
         formatted_pr_price = "{:,.1f}".format(total_product_price)
 
@@ -242,7 +242,7 @@ class WarehouseAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price= Sum('price'))[
+        total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
 
@@ -302,7 +302,27 @@ class SalesAdmin(admin.ModelAdmin):
     # readonly_fields = ('seller',)
     exclude = ('user',)
 
-    # change_list_template = 'admin/sales_change_list.html'
+    change_list_template = 'admin/sales_azamat.html'
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        queryset = self.get_queryset(request)
+
+        # Apply filters and search terms to the queryset
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
+
+        # Calculate total price
+        total_sold_price = queryset.aggregate(total_sold_price=Sum('selling_cut__total_sold_price'))['total_sold_price'] or 0
+
+        try:
+            response.context_data['total'] = "{:,.1f}".format(
+                total_sold_price)+'sum'
+        except:
+            pass
+
+        return response
 
     def get_list_display(self, request):
         if request.user.is_superuser:
@@ -315,13 +335,13 @@ class SalesAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            total_price= Sum('selling_cut__total_sold_price')
+            total_price=Sum('selling_cut__total_sold_price')
         )
         return queryset
 
     def get_total_price(self, obj):
         sales_events = obj.selling_cut.all()
-        total_price =  sum(event.total_sold_price for event in sales_events)
+        total_price = sum(event.total_sold_price for event in sales_events)
 
         formatted_price = "{:,.1f}".format(total_price)
         return formatted_price+' sum'
