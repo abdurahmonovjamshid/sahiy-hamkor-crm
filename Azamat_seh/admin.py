@@ -105,7 +105,7 @@ class ProductAdmin(DraggableMPTTAdmin):
 
     def get_total_sold(self, obj):
         if obj.parent:
-            return obj.total_new
+            return obj.total_sold
         else:
             return '-'
     get_total_sold.short_description = 'Sotilganlar soni'
