@@ -138,7 +138,9 @@ class ProductAdmin(DraggableMPTTAdmin):
                 obj.price*(obj.total_new))
             return formatted_price+' sum'
         else:
-            return '-'
+            total_price = obj.children.aggregate(
+                total_price=Sum(F('total_new') * F('price')))['total_price']
+            return "{:,.1f}".format(total_price)+'sum'
     non_sold_price.short_description = 'Mavjud tovar narxi'
     non_sold_price.admin_order_field = 'non_sold_price'
 
@@ -170,7 +172,9 @@ class ProductAdmin(DraggableMPTTAdmin):
             formatted_price = "{:,.1f}".format(obj.total_sold_price)
             return formatted_price+' sum'
         else:
-            return '-'
+            total_sold_price = obj.children.aggregate(
+                total_sold_price=Sum('total_sold_price'))['total_sold_price']
+            return "{:,.1f}".format(total_sold_price)+'sum'
     get_total_sold_price.short_description = "Sotilgan tovar narxi"
     get_total_sold_price.admin_order_field = 'total_sold_price'
 
@@ -314,7 +318,8 @@ class SalesAdmin(admin.ModelAdmin):
         queryset = cl.get_queryset(request)
 
         # Calculate total price
-        total_sold_price = queryset.aggregate(total_sold_price=Sum('selling_cut__total_sold_price'))['total_sold_price'] or 0
+        total_sold_price = SalesEvent.objects.filter(sales__in=queryset).aggregate(
+            total_sold_price=Sum(F('total_sold_price')))['total_sold_price']
 
         try:
             response.context_data['total'] = "{:,.1f}".format(

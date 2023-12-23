@@ -105,7 +105,7 @@ def sales_delete(sender, instance, **kwargs):
 
 @login_required
 def sales_excel_export(request):
-    queryset = Sales.objects.all()
+    queryset = Sales.objects.all().order_by('-id')
 
     # Create a new workbook
     workbook = Workbook()
