@@ -205,19 +205,45 @@ class ProductProductionAdmin(admin.ModelAdmin):
     list_filter = ('user', 'product', 'production_date',)
     readonly_fields = ('user', 'production_date')
     date_hierarchy = 'production_date'
-    # change_list_template = 'admin/production_change_list.html'
+    change_list_template = 'admin/production_azamat.html'
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        queryset = self.get_queryset(request)
+
+        # Apply filters and search terms to the queryset
+        cl = response.context_data['cl']
+        queryset = cl.get_queryset(request)
+
+        # Calculate total price
+
+        summary = queryset.values('product__name').annotate(
+            total_quantity=Sum(F('quantity')))
+        summary_list = {}
+        for result in summary:
+            product__name = result['product__name']
+            total_quantity = result['total_quantity']
+            if product__name in summary_list:
+                summary_list[product__name] += total_quantity
+            else:
+                summary_list[product__name] = total_quantity
+
+        sorted_data = sorted(summary_list.items(), key=lambda x: x[1], reverse=True)
+
+        sorted_dict = {item[0]: item[1] for item in sorted_data}
+
+        try:
+            response.context_data['total'] = sorted_dict
+        except:
+            pass
+
+        return response
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:
             obj.user = request.user
         obj.save()
-
-    # def get_queryset(self, request):
-    #     qs = super().get_queryset(request)
-    #     current_month = timezone.now().month
-    #     current_year = timezone.now().year
-
-    #     return qs.filter(production_date__month=current_month, production_date__year=current_year)
 
     def has_change_permission(self, request, obj=None):
         return False

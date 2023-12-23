@@ -1,0 +1,30 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+{% if request.user.is_superuser %}
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div></div>
+        <div>   
+            {% comment %} <div style="font-weight: bold;">{{ summary_line }}</div>
+            {% url 'production_export_excel' as export_url %}
+            <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a> {% endcomment %}
+        </div>
+    </div>
+    {% if total and request.user.is_superuser %}
+    <div>
+        <h3>Umumiy ishlab chiqarilgan tovarlar:</h3>
+        <ul>
+            <div style="display: flex; flex-wrap: wrap;">
+                {% for name, quantity in total.items %}
+                    <div style="flex-basis: 50%; padding: 5px;">
+                        {{ name }} : {{ quantity }} dona
+                    </div>
+                {% endfor %}
+            </div>
+        </ul>
+    </div>
+    {% endif %}
+{% endif %}
+    {{ block.super }}
+{% endblock %}
