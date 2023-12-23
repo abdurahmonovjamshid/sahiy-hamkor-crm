@@ -24,7 +24,8 @@ from seh_1 import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('seh_1.urls')),
+    path('seh_1/', include('seh_1.urls')),
+    path('azamat_seh/', include('Azamat_seh.urls')),
     re_path(r'^static/(?P<path>.*)$', serve,
             {'document_root': settings.STATIC_ROOT}),
 
