@@ -93,13 +93,13 @@ class ProductProduction(models.Model):
         Product, on_delete=models.CASCADE, verbose_name='Produkt', limit_choices_to={'parent__isnull': False})
     quantity = models.PositiveIntegerField(verbose_name="Kesilmaganlar soni")
 
-    production_date = models.DateTimeField(
+    date = models.DateTimeField(
         auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
 
     class Meta:
         verbose_name = 'Tovar '
         verbose_name_plural = 'Tovarlar Ishlab Chiqarish'
-        ordering = ['-production_date']
+        ordering = ['-date']
 
     def __str__(self):
         return f'{self.quantity} dona {self.product}'
@@ -110,7 +110,7 @@ class Warehouse(models.Model):
         Component, on_delete=models.CASCADE, verbose_name='Komponent', limit_choices_to={'parent__isnull': False})
     quantity = models.IntegerField(verbose_name="Miqdor")
     price = models.FloatField(default=0, verbose_name='Narxi')
-    arrival_time = models.DateTimeField(
+    date = models.DateTimeField(
         auto_now_add=True, verbose_name='Keltirilgan sana')
 
     user = models.ForeignKey(

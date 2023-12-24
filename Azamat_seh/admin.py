@@ -204,10 +204,10 @@ class ProductAdmin(DraggableMPTTAdmin):
 
 
 class ProductProductionAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'quantity', 'user', 'production_date')
-    list_filter = ('user', 'product', 'production_date',)
-    readonly_fields = ('user', 'production_date')
-    date_hierarchy = 'production_date'
+    list_display = ('__str__', 'quantity', 'user', 'date')
+    list_filter = ('user', 'product', 'date',)
+    readonly_fields = ('user', 'date')
+    date_hierarchy = 'date'
     change_list_template = 'admin/production_azamat.html'
 
     def changelist_view(self, request, extra_context=None):
@@ -259,18 +259,18 @@ class ProductProductionAdmin(admin.ModelAdmin):
 
 
 class WarehouseAdmin(admin.ModelAdmin):
-    list_filter = ('arrival_time', 'component')
-    date_hierarchy = 'arrival_time'
-    ordering = ('-arrival_time',)
+    list_filter = ('date', 'component')
+    date_hierarchy = 'date'
+    ordering = ('-date',)
     exclude = ('user', 'price')
 
     # change_list_template = 'admin/warehouse_change_list.html'
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('__str__', 'get_price', 'user', 'arrival_time')
+            return ('__str__', 'get_price', 'user', 'date')
         else:
-            return ('__str__', 'user', 'arrival_time')
+            return ('__str__', 'user', 'date')
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
