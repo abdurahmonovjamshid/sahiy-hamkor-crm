@@ -103,7 +103,7 @@ def sales_delete(sender, instance, **kwargs):
         print(e)
 
 
-# @login_required
+@login_required
 def sales_excel_export(request):
     queryset = Sales.objects.all().order_by('-id')
 
