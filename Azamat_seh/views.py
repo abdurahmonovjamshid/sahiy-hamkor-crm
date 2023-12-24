@@ -165,3 +165,53 @@ def sales_excel_export(request):
     workbook.save(response)
 
     return response
+
+
+@login_required
+def azamat_production_excel(request):
+    queryset = ProductProduction.objects.all().order_by('-id')
+
+    # Create a new workbook
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    search_query = request.GET.get('q')
+    if search_query:
+        queryset = queryset.filter(Q(series=search_query))
+
+    filters = request.GET.dict()
+    filters.pop('q', None)
+    filters.pop('o', None)
+    if filters:
+        queryset = queryset.filter(**filters)
+
+    # Write headers
+    headers = [ 'Produkt', 'Kesilmaganlar soni', 'Xodim', 'Ishlab chiqarilish vaqti']
+    worksheet.append(headers)
+
+    # Write data rows
+    for production in queryset:
+        row = [
+            str(production.product),
+            production.quantity,
+            production.user.username,
+            production.production_date.replace(
+                tzinfo=None),  # Remove timezone information
+        ]
+        worksheet.append(row)
+
+    # Set column width for Arrival Time
+    worksheet.column_dimensions['A'].width = 20
+    worksheet.column_dimensions['B'].width = 20
+    worksheet.column_dimensions['C'].width = 20
+    worksheet.column_dimensions['D'].width = 30
+
+    # Set the response headers for file download
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=azamat_production.xlsx'
+
+    # Save workbook to response
+    workbook.save(response)
+
+    return response
