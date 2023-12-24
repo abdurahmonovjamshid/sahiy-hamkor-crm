@@ -8,7 +8,7 @@
             <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
         </div>
     </div>
-    <div id="chart">{{ graph|safe }}</div>
+    <div id="chart-container">{{ graph|safe }}</div> <!-- Reserve space for the graph -->
     {% if total and request.user.is_superuser %}
         <div>
             <h3>Umumiy sotuv narxi:</h3>
@@ -18,4 +18,27 @@
         </div>
     {% endif %}
     {{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Simulating graph rendering with a sample chart library (replace this with your actual graph rendering code)
+            // Example using Plotly.js library
+
+            // Prepare data for the chart (replace with your actual chart data)
+            const productNames = {{ product_names|safe }};
+            const totalSales = {{ total_sales|safe }};
+
+            // Create the graph asynchronously
+            setTimeout(function() {
+                Plotly.newPlot('chart-container', [{
+                    x: productNames,
+                    y: totalSales,
+                    type: 'bar'
+                }]);
+            }, 0);
+        });
+    </script>
 {% endblock %}
