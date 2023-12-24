@@ -1,3 +1,6 @@
+from django.urls import path
+import plotly.graph_objects as go
+from django.shortcuts import render
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
@@ -229,7 +232,8 @@ class ProductProductionAdmin(admin.ModelAdmin):
             else:
                 summary_list[product__name] = total_quantity
 
-        sorted_data = sorted(summary_list.items(), key=lambda x: x[1], reverse=True)
+        sorted_data = sorted(summary_list.items(),
+                             key=lambda x: x[1], reverse=True)
 
         sorted_dict = {item[0]: item[1] for item in sorted_data}
 
@@ -337,11 +341,20 @@ class SalesAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
-
         # Apply filters and search terms to the queryset
         cl = response.context_data['cl']
         queryset = cl.get_queryset(request)
+
+        sales_events = SalesEvent.objects.filter(sales__in=queryset)
+
+        products = sales_events.values('product__name').annotate(
+            total_sales=Sum('quantity_sold')
+        )
+        product_names = [product['product__name'] for product in products]
+        total_sales = [product['total_sales'] for product in products]
+
+        fig = go.Figure(data=[go.Bar(x=product_names, y=total_sales)])
+        div = fig.to_html(full_html=False)
 
         # Calculate total price
         total_sold_price = SalesEvent.objects.filter(sales__in=queryset).aggregate(
@@ -350,6 +363,7 @@ class SalesAdmin(admin.ModelAdmin):
         try:
             response.context_data['total'] = "{:,.1f}".format(
                 total_sold_price)+'sum'
+            response.context_data['graph'] = div
         except:
             pass
 

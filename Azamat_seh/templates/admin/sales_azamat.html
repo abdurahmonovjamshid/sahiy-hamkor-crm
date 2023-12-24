@@ -8,6 +8,7 @@
             <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a>
         </div>
     </div>
+    <div id="chart">{{ graph|safe }}</div>
     {% if total and request.user.is_superuser %}
         <div>
             <h3>Umumiy sotuv narxi:</h3>
