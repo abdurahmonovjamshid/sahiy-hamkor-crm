@@ -195,7 +195,7 @@ def azamat_production_excel(request):
             str(production.product),
             production.quantity,
             production.user.username,
-            production.production_date.replace(
+            production.date.replace(
                 tzinfo=None),  # Remove timezone information
         ]
         worksheet.append(row)
