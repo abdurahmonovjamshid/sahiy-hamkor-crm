@@ -141,8 +141,14 @@ class Sales(models.Model):
         verbose_name = 'Sotuv '
         verbose_name_plural = "Sotuv Bo'limi "
 
+    def calculate_total_price(self):
+        sales_events = self.selling_cut.all()
+        total_price = sum(event.total_sold_price for event in sales_events)
+        return total_price
+
     def __str__(self):
-        return self.buyer
+        total_price = self.calculate_total_price()
+        return f"{self.buyer} - {self.seller} - {total_price}sum"
 
 
 class SalesEvent(models.Model):
