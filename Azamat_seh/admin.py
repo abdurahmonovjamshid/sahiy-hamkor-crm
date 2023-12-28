@@ -31,7 +31,9 @@ class ComponentAdmin(DraggableMPTTAdmin):
 
     def get_total_price(self, obj):
         if not obj.parent:
-            return '-'
+            total_child_price = obj.children.annotate(total_price=F(
+                'price') * F('total')).aggregate(total=Sum('total_price'))['total']
+            return "{:,.2f}".format(total_child_price).rstrip("0").rstrip(".")+'sum'
         formatted_price = "{:,.1f}".format(obj.total * obj.price)
         return formatted_price+' sum'
 
