@@ -132,13 +132,6 @@ class ProductProduction(models.Model):
     def __str__(self):
         return f'{self.series}-{self.product} ({self.quantity} dona'
 
-    def clean(self):
-        super().clean()
-        if self.parent_id:
-            if self.parent.product.id != self.product.id:
-                raise ValidationError(
-                    "Bo'lim va tanlangan product mos emas")
-
 
 class Warehouse(models.Model):
     component = models.ForeignKey(
@@ -189,7 +182,7 @@ class CuttingEvent(models.Model):
     def clean(self):
         super().clean()
         if self.product_id:
-            if self.quantity_cut > self.product_production.total_new:
+            if self.quantity_cut > self.product.total_new:
                 raise ValidationError(
                     "Kesilgan qiymat ishlab chiqarilgan qiymatdan oshib ketdi")
         else:
@@ -237,7 +230,7 @@ class SalesEvent(models.Model):
 
     def clean(self):
         super().clean()
-        if self.cut_product:
+        if self.product:
             if self.quantity_sold > self.product.total_cut:
                 raise ValidationError(
                     "sotilgan qiymat kesilgan qiymatdan oshib ketdi")
@@ -253,7 +246,7 @@ class SalesEvent(models.Model):
         unique_together = ['product', 'sales']
 
     def __str__(self):
-        return str(self.quantity_sold)+' ta '+self.product.name+' sotildi'
+        return str(self.quantity_sold)+' ta '+self.product.name
 
 
 class SalesEvent2(models.Model):
@@ -288,4 +281,4 @@ class SalesEvent2(models.Model):
         unique_together = ['product', 'sales']
 
     def __str__(self):
-        return str(self.quantity_sold)+' ta '+self.product.name+' sotildi'
+        return str(self.quantity_sold)+' ta '+self.product.name

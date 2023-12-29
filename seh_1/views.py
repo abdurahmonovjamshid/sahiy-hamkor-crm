@@ -35,6 +35,9 @@ def component_export_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
+
 
     if filters:
         components = components.filter(**filters)
@@ -90,6 +93,9 @@ def export_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
+
 
     if filters:
         products = products.filter(**filters)
@@ -154,6 +160,9 @@ def export_warehouse_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
+
     if filters:
         queryset = queryset.filter(**filters)
 
@@ -209,7 +218,7 @@ def export_warehouse_excel(request):
 
 @login_required
 def export_production_excel(request):
-    queryset = ProductProduction.objects.filter(parent__isnull=True)
+    queryset = ProductProduction.objects.all()
 
     # Create a new workbook
     workbook = Workbook()
@@ -222,12 +231,15 @@ def export_production_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
+
     if filters:
         queryset = queryset.filter(**filters)
 
     # Write headers
-    headers = ['Seriya', 'Produkt',
-               'Kesilmaganlar soni', 'Kesilganlar soni', 'sotilganlar soni', 'Xodim', 'Ishlab chiqarilish vaqti']
+    headers = ['Seriya', 'Produkt', 'Kesilmaganlar soni',
+               'Xodim', 'Ishlab chiqarilish vaqti']
     worksheet.append(headers)
 
     # Write data rows
@@ -236,10 +248,8 @@ def export_production_excel(request):
             production.series,
             str(production.product),
             production.quantity,
-            production.total_cut,
-            production.total_sold,
             production.user.username,
-            production.production_date.replace(
+            production.date.replace(
                 tzinfo=None),  # Remove timezone information
         ]
         worksheet.append(row)
@@ -280,6 +290,8 @@ def export_reproduction_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
     if filters:
         queryset = queryset.filter(**filters)
 
@@ -292,7 +304,7 @@ def export_reproduction_excel(request):
     for reproduction in queryset:
         cutting_events = reproduction.cutting.all()
         events = ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' +
-                           cutting_event.product_production.product.name) for cutting_event in cutting_events)
+                           cutting_event.product.name) for cutting_event in cutting_events)
         total_cut = 0
         for cuttingevent in reproduction.cutting.all():
             total_cut += cuttingevent.quantity_cut
@@ -300,7 +312,7 @@ def export_reproduction_excel(request):
             reproduction.user.username,
             total_cut,
             events,
-            reproduction.re_production_date.replace(
+            reproduction.date.replace(
                 tzinfo=None),  # Remove timezone information
         ]
         worksheet.append(row)
@@ -340,6 +352,8 @@ def export_sales_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('all', None)
+    filters.pop('p', None)
     if filters:
         queryset = queryset.filter(**filters)
 
@@ -435,10 +449,6 @@ def subtract_component_total(sender, instance, created, **kwargs):
 
             except Exception as e:
                 print(e)
-        if instance.parent:
-            parent = instance.parent
-            parent.quantity += instance.quantity
-            parent.save()
 
 
 @receiver(post_delete, sender=ProductProduction)
@@ -453,13 +463,6 @@ def delete_component_total(sender, instance, **kwargs):
         component = product_component.component
         component.total += total_quantity_by_component
         component.save()
-    try:
-        if instance.parent:
-            parent = instance.parent
-            parent.quantity -= instance.quantity
-            parent.save()
-    except:
-        pass
 
 
 @receiver(post_save, sender=Warehouse)
@@ -491,127 +494,62 @@ def update_component_total_on_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=CuttingEvent)
 def curring_create(sender, instance, created, **kwargs):
     if created:
-        try:
-            pr_production = instance.product_production
-            pr_production.quantity -= instance.quantity_cut
-            pr_production.total_cut += instance.quantity_cut
-            pr_production.save()
-
-            product = pr_production.product
-            product.total_new -= instance.quantity_cut
-            product.total_cut += instance.quantity_cut
-            product.save()
-
-            if instance.is_complete:
-                pr_production.cutting_complate = True
-                pr_production.save()
-
-        except Exception as e:
-            print(e)
+        product = instance.product
+        product.total_new -= instance.quantity_cut
+        product.total_cut += instance.quantity_cut
+        product.save()
 
 
 @receiver(post_delete, sender=CuttingEvent)
 def cutting_delete(sender, instance, **kwargs):
-    try:
-        pr_production = instance.product_production
-        pr_production.quantity += instance.quantity_cut
-        pr_production.total_cut -= instance.quantity_cut
-        pr_production.save()
-
-        product = pr_production.product
-        product.total_new += instance.quantity_cut
-        product.total_cut -= instance.quantity_cut
-        product.save()
-
-        if instance.is_complete:
-            pr_production.cutting_complate = False
-            pr_production.save()
-
-        product_reproduction = instance.product_reproduction
-
-        if product_reproduction.cutting.all().count() == 0:
-            product_reproduction.delete()
-    except Exception as e:
-        print(e)
+    product = instance.product
+    product.total_new += instance.quantity_cut
+    product.total_cut -= instance.quantity_cut
+    product.save()
 
 
 @receiver(post_save, sender=SalesEvent)
 def sales_create(sender, instance, created, **kwargs):
     if created:
-        print('/'*88)
-        try:
-
-            pr_production = instance.cut_product
-            pr_production.total_cut -= instance.quantity_sold
-            pr_production.total_sold += instance.quantity_sold
-            pr_production.save()
-
-            product = pr_production.product
-            product.total_cut -= instance.quantity_sold
-            product.total_sold += instance.quantity_sold
-            product.total_sold_price += instance.total_sold_price
-            product.save()
-
-        except Exception as e:
-            print(e)
+        product = instance.product
+        product.total_cut -= instance.quantity_sold
+        product.total_sold += instance.quantity_sold
+        product.total_sold_price += instance.total_sold_price
+        product.save()
 
 
 @receiver(post_delete, sender=SalesEvent)
 def sales_delete(sender, instance, **kwargs):
-    try:
 
-        pr_production = instance.cut_product
-        pr_production.total_cut += instance.quantity_sold
-        pr_production.total_sold -= instance.quantity_sold
-        pr_production.save()
+    product = instance.product
+    product.total_cut += instance.quantity_sold
+    product.total_sold -= instance.quantity_sold
+    product.total_sold_price -= instance.total_sold_price
+    product.save()
 
-        product = pr_production.product
-        product.total_cut += instance.quantity_sold
-        product.total_sold -= instance.quantity_sold
-        product.total_sold_price -= instance.total_sold_price
-        product.save()
-
-        sales = instance.sales
-        if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
-            sales.delete()
-    except Exception as e:
-        print(e)
+    sales = instance.sales
+    if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
+        sales.delete()
 
 
 @receiver(post_save, sender=SalesEvent2)
 def sales2_create(sender, instance, created, **kwargs):
     if created:
-        try:
-            pr_production = instance.non_cut_product
-            pr_production.quantity -= instance.quantity_sold
-            pr_production.total_sold += instance.quantity_sold
-            pr_production.save()
-
-            product = pr_production.product
-            product.total_new -= instance.quantity_sold
-            product.total_sold += instance.quantity_sold
-            product.total_sold_price += instance.total_sold_price
-            product.save()
-        except Exception as e:
-            print(e)
+        product = instance.product
+        product.total_new -= instance.quantity_sold
+        product.total_sold += instance.quantity_sold
+        product.total_sold_price += instance.total_sold_price
+        product.save()
 
 
 @receiver(post_delete, sender=SalesEvent2)
 def sales2_delete(sender, instance, **kwargs):
-    try:
-        pr_production = instance.non_cut_product
-        pr_production.quantity += instance.quantity_sold
-        pr_production.total_sold -= instance.quantity_sold
-        pr_production.save()
+    product = instance.product
+    product.total_new += instance.quantity_sold
+    product.total_sold -= instance.quantity_sold
+    product.total_sold_price -= instance.total_sold_price
+    product.save()
 
-        product = pr_production.product
-        product.total_new += instance.quantity_sold
-        product.total_sold -= instance.quantity_sold
-        product.total_sold_price -= instance.total_sold_price
-        product.save()
-
-        sales = instance.sales
-        if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
-            sales.delete()
-    except Exception as e:
-        print(e)
+    sales = instance.sales
+    if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
+        sales.delete()

@@ -119,6 +119,9 @@ def sales_excel_export(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
+
     if filters:
         queryset = queryset.filter(**filters)
 
@@ -182,11 +185,15 @@ def azamat_production_excel(request):
     filters = request.GET.dict()
     filters.pop('q', None)
     filters.pop('o', None)
+    filters.pop('p', None)
+    filters.pop('all', None)
+
     if filters:
         queryset = queryset.filter(**filters)
 
     # Write headers
-    headers = [ 'Produkt', 'Kesilmaganlar soni', 'Xodim', 'Ishlab chiqarilish vaqti']
+    headers = ['Produkt', 'Kesilmaganlar soni',
+               'Xodim', 'Ishlab chiqarilish vaqti']
     worksheet.append(headers)
 
     # Write data rows
