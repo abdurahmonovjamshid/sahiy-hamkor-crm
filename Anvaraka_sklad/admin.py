@@ -1,3 +1,5 @@
+from django.utils import timezone
+from datetime import datetime
 from decimal import Decimal
 from django.utils.safestring import mark_safe
 from django.contrib import admin
@@ -114,6 +116,18 @@ class WarehouseAdmin(admin.ModelAdmin):
 
     change_list_template = 'admin/warehouse_anvar.html'
 
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                arrival_time__year=current_year, arrival_time__month=current_month)
+
+        return queryset
+
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('__str__', 'get_price', 'user', 'arrival_time')
@@ -212,6 +226,18 @@ class SellingAdmin(admin.ModelAdmin):
     exclude = ('user', 'sold_time')
 
     change_list_template = 'admin/sales_anvar.html'
+
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                sold_time__year=current_year, sold_time__month=current_month)
+
+        return queryset
 
     def get_list_display(self, request):
         if request.user.is_superuser:

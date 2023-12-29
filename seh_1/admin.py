@@ -1,3 +1,5 @@
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
@@ -273,6 +275,30 @@ class ProductProductionAdmin(admin.ModelAdmin):
     list_display_links = ('get_title',)
     change_list_template = 'admin/production_change_list.html'
 
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                date__year=current_year, date__month=current_month)
+
+        return queryset
+
+    def changelist_view(self, request, extra_context=None):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+
+        # Redirect to the current month's view
+        if not request.GET:
+            url = reverse('admin:seh_1_productproduction_changelist')
+            url += f'?date__year={current_year}&date__month={current_month}'
+            return HttpResponseRedirect(url)
+
+        return super().changelist_view(request, extra_context)
+
     def get_title(self, instance):
         return f'{instance.series}-{instance.product}'
     get_title.short_description = 'Title'
@@ -298,6 +324,18 @@ class WarehouseAdmin(admin.ModelAdmin):
     exclude = ('user', 'price')
 
     change_list_template = 'admin/warehouse_change_list.html'
+
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                arrival_time__year=current_year, arrival_time__month=current_month)
+
+        return queryset
 
     def get_list_display(self, request):
         if request.user.is_superuser:
@@ -364,6 +402,18 @@ class ProductReProductionAdmin(admin.ModelAdmin):
 
     change_list_template = 'admin/reproduction_change_list.html'
 
+    def changelist_view(self, request, extra_context=None):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+
+        # Redirect to the current month's view
+        if not request.GET:
+            url = reverse('admin:seh_1_productreproduction_changelist')
+            url += f'?date__year={current_year}&date__month={current_month}'
+            return HttpResponseRedirect(url)
+
+        return super().changelist_view(request, extra_context)
+
     def get_cutting_events(self, obj):
         cutting_events = obj.cutting.all()
         return ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' + cutting_event.product.name) for cutting_event in cutting_events)
@@ -418,6 +468,18 @@ class SalesEventInline2(admin.TabularInline):
     readonly_fields = ('total_sold_price', 'single_sold_price')
     autocomplete_fields = ('sales',)
 
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                date__year=current_year, date__month=current_month)
+
+        return queryset
+
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price')
@@ -440,6 +502,18 @@ class SalesAdmin(admin.ModelAdmin):
     exclude = ('user',)
 
     change_list_template = 'admin/sales_change_list.html'
+
+    def changelist_view(self, request, extra_context=None):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+
+        # Redirect to the current month's view
+        if not request.GET:
+            url = reverse('admin:seh_1_sales_changelist')
+            url += f'?date__year={current_year}&date__month={current_month}'
+            return HttpResponseRedirect(url)
+
+        return super().changelist_view(request, extra_context)
 
     def get_list_display(self, request):
         if request.user.is_superuser:

@@ -212,6 +212,18 @@ class ProductProductionAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
     change_list_template = 'admin/production_azamat.html'
 
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                date__year=current_year, date__month=current_month)
+
+        return queryset
+
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
@@ -267,6 +279,17 @@ class WarehouseAdmin(admin.ModelAdmin):
     exclude = ('user', 'price')
 
     # change_list_template = 'admin/warehouse_change_list.html'
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                date__year=current_year, date__month=current_month)
+
+        return queryset
 
     def get_list_display(self, request):
         if request.user.is_superuser:
@@ -316,6 +339,18 @@ class SalesEventInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ('sales',)
     readonly_fields = ('single_sold_price', 'total_sold_price')
+
+    def get_queryset(self, request):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset(request)
+
+        # Check if any filter is already applied
+        if not request.GET:
+            queryset = queryset.filter(
+                date__year=current_year, date__month=current_month)
+
+        return queryset
 
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
