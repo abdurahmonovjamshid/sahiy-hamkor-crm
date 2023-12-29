@@ -1,3 +1,4 @@
+from django.db.models import Case, F, Sum, Value, When
 from django.utils import timezone
 from datetime import datetime
 from decimal import Decimal
@@ -6,6 +7,7 @@ from django.contrib import admin
 from django.db.models import F, Sum
 from django.utils.html import format_html
 from mptt.admin import DraggableMPTTAdmin
+from django.db import models
 
 from .models import Product, Warehouse, Sales, ProductComponent, SalesEvent, Selling
 
@@ -61,7 +63,24 @@ class ProductAdmin(DraggableMPTTAdmin):
 
     def get_total_price(self, obj):
         if not obj.parent:
-            return '-'
+            nmadur = obj.children.aggregate(
+                sum=Sum(Case(
+                    When(currency='sum', then=F('price')*F('total')),
+                    default=0,
+                    output_field=models.FloatField()
+                )),
+                usd=Sum(Case(
+                    When(currency='$', then=F('price')*F('total')),
+                    default=0,
+                    output_field=models.FloatField()
+                ))
+            )
+            formatted_prices = ''
+            if nmadur['sum'] != 0.0:
+                formatted_prices += "{:,.1f}".format(nmadur['sum'])+'sum '
+            if nmadur['usd'] != 0.0:
+                formatted_prices += "{:,.1f}".format(nmadur['usd'])+'$ '
+            return formatted_prices
         formatted_price = "{:,.1f}".format(obj.total * obj.price)
         return formatted_price+' '+obj.currency
 
