@@ -1,3 +1,5 @@
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 from django.db.models import Case, F, Sum, Value, When
 from django.utils import timezone
 from datetime import datetime
@@ -135,18 +137,6 @@ class WarehouseAdmin(admin.ModelAdmin):
 
     change_list_template = 'admin/warehouse_anvar.html'
 
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                arrival_time__year=current_year, arrival_time__month=current_month)
-
-        return queryset
-
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('__str__', 'get_price', 'user', 'arrival_time')
@@ -154,6 +144,13 @@ class WarehouseAdmin(admin.ModelAdmin):
             return ('__str__', 'user', 'arrival_time')
 
     def changelist_view(self, request, extra_context=None):
+        if not request.GET:
+            current_month = timezone.now().month
+            current_year = timezone.now().year
+            return HttpResponseRedirect(
+                reverse('admin:Anvaraka_sklad_warehouse_changelist') +
+                f'?arrival_time__year={current_year}&arrival_time__month={current_month}'
+            )
         response = super().changelist_view(request, extra_context=extra_context)
 
         # queryset = self.get_queryset(request)
@@ -246,18 +243,6 @@ class SellingAdmin(admin.ModelAdmin):
 
     change_list_template = 'admin/sales_anvar.html'
 
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                sold_time__year=current_year, sold_time__month=current_month)
-
-        return queryset
-
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('buyer', 'get_sold_products', 'get_paid', 'user', 'sold_time')
@@ -279,6 +264,13 @@ class SellingAdmin(admin.ModelAdmin):
         )
 
     def changelist_view(self, request, extra_context=None):
+        if not request.GET:
+            current_month = timezone.now().month
+            current_year = timezone.now().year
+            return HttpResponseRedirect(
+                reverse('admin:Anvaraka_sklad_selling_changelist') +
+                f'?sold_time__year={current_year}&sold_time__month={current_month}'
+            )
         response = super().changelist_view(request, extra_context=extra_context)
 
         # queryset = self.get_queryset(request)

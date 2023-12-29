@@ -275,18 +275,6 @@ class ProductProductionAdmin(admin.ModelAdmin):
     list_display_links = ('get_title',)
     change_list_template = 'admin/production_change_list.html'
 
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                date__year=current_year, date__month=current_month)
-
-        return queryset
-
     def changelist_view(self, request, extra_context=None):
         current_month = timezone.now().month
         current_year = timezone.now().year
@@ -325,18 +313,6 @@ class WarehouseAdmin(admin.ModelAdmin):
 
     change_list_template = 'admin/warehouse_change_list.html'
 
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                arrival_time__year=current_year, arrival_time__month=current_month)
-
-        return queryset
-
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('__str__', 'get_price', 'user', 'arrival_time')
@@ -344,12 +320,18 @@ class WarehouseAdmin(admin.ModelAdmin):
             return ('__str__', 'user', 'arrival_time')
 
     def changelist_view(self, request, extra_context=None):
+        if not request.GET:
+            current_month = timezone.now().month
+            current_year = timezone.now().year
+            return HttpResponseRedirect(
+                reverse('admin:seh_1_warehouse_changelist') +
+                f'?arrival_time__year={current_year}&arrival_time__month={current_month}'
+            )
+
         response = super().changelist_view(request, extra_context=extra_context)
 
-        # queryset = self.get_queryset(request)
-
         cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        queryset = cl.queryset
 
         total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
@@ -357,8 +339,9 @@ class WarehouseAdmin(admin.ModelAdmin):
 
         try:
             response.context_data['summary_line'] = f"Umumiy narx: {formatted_price}"
-        except:
+        except KeyError:
             pass
+
         return response
 
     def get_price(self, obj):
