@@ -112,12 +112,7 @@ class ProductComponent(models.Model):
         return f'({self.quantity} {self.component.get_measurement_display()})'
 
 
-class ProductProduction(MPTTModel):
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, verbose_name="Bo'limlar",
-                               limit_choices_to={
-                                   'parent__isnull': True, 'cutting_complate': False, },
-                               related_name='children', null=True, blank=True, )
-
+class ProductProduction(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, verbose_name='xodim', null=True, blank=True)
 
@@ -125,24 +120,17 @@ class ProductProduction(MPTTModel):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Produkt')
     quantity = models.PositiveIntegerField(verbose_name="Kesilmaganlar soni")
-    total_cut = models.IntegerField(
-        default=0, verbose_name="Kesilganlar soni")
-    total_sold = models.IntegerField(
-        default=0, verbose_name="sotilganlar soni")
 
-    cutting_complate = models.BooleanField(
-        default=False, verbose_name='kesish yakunlandi')
-
-    production_date = models.DateTimeField(
+    date = models.DateTimeField(
         auto_now_add=True, verbose_name='Ishlab chiqarilish vaqti')
 
     class Meta:
         verbose_name = 'Tovar '
         verbose_name_plural = 'Ishlab Chiqarilgan Tovarlar'
-        ordering = ['-production_date']
+        ordering = ['-id']
 
     def __str__(self):
-        return f'{self.series}-{self.product} ({self.quantity} dona kesilmagan)({self.total_cut} dona kesilgan)'
+        return f'{self.series}-{self.product} ({self.quantity} dona'
 
     def clean(self):
         super().clean()
@@ -176,13 +164,14 @@ class Warehouse(models.Model):
 
 
 class ProductReProduction(models.Model):
+    series = models.CharField(max_length=50, verbose_name="Seriya")
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Xodim')
-    re_production_date = models.DateTimeField(
+    date = models.DateTimeField(
         auto_now_add=True, verbose_name='Kesilgan vaqti')
 
     def __str__(self):
-        formatted_date = self.re_production_date.strftime('%B %Y, %H:%M')
+        formatted_date = self.date.strftime('%B %Y, %H:%M')
         return f'{self.user} ({formatted_date})'
 
     class Meta:
@@ -191,19 +180,16 @@ class ProductReProduction(models.Model):
 
 
 class CuttingEvent(models.Model):
-    product_production = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, 'cutting_complate': False, 'parent__isnull': True}, verbose_name='Tovar')
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_new__gt': 0}, verbose_name='Tovar')
     quantity_cut = models.PositiveIntegerField(verbose_name="Kesilganlar soni")
     product_reproduction = models.ForeignKey(
         ProductReProduction, on_delete=models.CASCADE, related_name='cutting')
 
-    is_complete = models.BooleanField(
-        default=False, verbose_name='Seriyadagi mahsulot kesib bo\'lindi')
-
     def clean(self):
         super().clean()
-        if self.product_production_id:
-            if self.quantity_cut > self.product_production.quantity:
+        if self.product_id:
+            if self.quantity_cut > self.product_production.total_new:
                 raise ValidationError(
                     "Kesilgan qiymat ishlab chiqarilgan qiymatdan oshib ketdi")
         else:
@@ -211,15 +197,16 @@ class CuttingEvent(models.Model):
                 "xatolik")
 
     def __str__(self):
-        return f"{self.quantity_cut} cut from {self.product_production.series}-{self.product_production.product}"
+        return f"{self.quantity_cut} cut from {self.product_reproduction.series}-{self.product.name}"
 
     class Meta:
         verbose_name = 'Kesish'
         verbose_name_plural = 'Kesish'
-        unique_together = ['product_production', 'product_reproduction']
+        unique_together = ['product', 'product_reproduction']
 
 
 class Sales(models.Model):
+    series = models.CharField(max_length=50, verbose_name="Seriya")
     buyer = models.CharField(max_length=250, verbose_name='Haridor')
     seller = models.CharField(max_length=250, verbose_name='Sotuvchi')
     user = models.ForeignKey(
@@ -236,8 +223,8 @@ class Sales(models.Model):
 
 
 class SalesEvent(models.Model):
-    cut_product = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut__gt': 0, 'parent__isnull': True})
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_cut__gt': 0})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
@@ -251,27 +238,27 @@ class SalesEvent(models.Model):
     def clean(self):
         super().clean()
         if self.cut_product:
-            if self.quantity_sold > self.cut_product.total_cut:
+            if self.quantity_sold > self.product.total_cut:
                 raise ValidationError(
                     "sotilgan qiymat kesilgan qiymatdan oshib ketdi")
 
     def save(self, *args, **kwargs):
-        self.single_sold_price = self.cut_product.product.price
+        self.single_sold_price = self.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
         super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Kesilgan mahsulot'
         verbose_name_plural = 'Kesilgan mahsulotlar'
-        unique_together = ['cut_product', 'sales']
+        unique_together = ['product', 'sales']
 
     def __str__(self):
-        return str(self.quantity_sold)+' ta '+self.cut_product.product.name
+        return str(self.quantity_sold)+' ta '+self.product.name+' sotildi'
 
 
 class SalesEvent2(models.Model):
-    non_cut_product = models.ForeignKey(
-        ProductProduction, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'quantity__gt': 0, 'parent__isnull': True})
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, null=False, blank=False, limit_choices_to={'total_new__gt': 0})
     quantity_sold = models.PositiveIntegerField(
         verbose_name="Sotilganlar soni")
     sales = models.ForeignKey(
@@ -285,20 +272,20 @@ class SalesEvent2(models.Model):
 
     def clean(self):
         super().clean()
-        if self.non_cut_product:
-            if self.quantity_sold > self.non_cut_product.quantity:
+        if self.product:
+            if self.quantity_sold > self.product.total_new:
                 raise ValidationError(
                     "sotilgan qiymat kesilmagan qiymatdan oshib ketdi")
 
     def save(self, *args, **kwargs):
-        self.single_sold_price = self.non_cut_product.product.price
+        self.single_sold_price = self.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
         super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Kesilmagan mahsulot'
         verbose_name_plural = 'Kesilmagan mahsulot'
-        unique_together = ['non_cut_product', 'sales']
+        unique_together = ['product', 'sales']
 
     def __str__(self):
-        return str(self.quantity_sold)+' ta '+self.non_cut_product.product.name
+        return str(self.quantity_sold)+' ta '+self.product.name+' sotildi'

@@ -262,36 +262,14 @@ class ProductAdmin(admin.ModelAdmin):
         return response
 
 
-class ProductProductionAdmin(DraggableMPTTAdmin):
-    actions = ['toggle_cutting_complete']
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        del actions['delete_selected']
-        return actions
-
-    def toggle_cutting_complete(self, request, queryset):
-        # Toggle the cutting_complate field for selected objects
-        updated_count = queryset.update(
-            cutting_complate=~F('cutting_complate'))
-
-        # Display a success message
-        message = f"{updated_count} ProductProduction object(s) cutting completion toggled."
-        self.message_user(request, message, messages.SUCCESS)
-
-    toggle_cutting_complete.short_description = "Toggle cutting completion for selected objects"
-
-    mptt_indent_field = "series"
-    autocomplete_fields = ('parent',)
+class ProductProductionAdmin(admin.ModelAdmin):
     search_fields = ('title',)
 
-    list_display = ('tree_actions', 'get_title', 'quantity', 'get_total_cut',
-                    'get_total_sold', 'cutting_complate', 'user', 'production_date')
-    list_filter = ('user', 'product', 'production_date', 'series')
-    readonly_fields = ('user', 'total_cut', 'total_sold',
-                       'production_date', 'cutting_complate')
+    list_display = ('get_title', 'quantity', 'user', 'date')
+    list_filter = ('user', 'product', 'date', 'series')
+    readonly_fields = ('user', 'date',)
     # exclude = ['cutting_complate']
-    date_hierarchy = 'production_date'
+    date_hierarchy = 'date'
     list_display_links = ('get_title',)
     change_list_template = 'admin/production_change_list.html'
 
@@ -299,29 +277,10 @@ class ProductProductionAdmin(DraggableMPTTAdmin):
         return f'{instance.series}-{instance.product}'
     get_title.short_description = 'Title'
 
-    def get_total_cut(self, obj):
-        if obj.parent:
-            return '-'
-        else:
-            return obj.total_cut
-
-    def get_total_sold(self, obj):
-        if obj.parent:
-            return '-'
-        else:
-            return obj.total_sold
-
     def save_model(self, request, obj, form, change):
         if not obj.user_id:
             obj.user = request.user
         obj.save()
-
-    # def get_queryset(self, request):
-    #     qs = super().get_queryset(request)
-    #     current_month = timezone.now().month
-    #     current_year = timezone.now().year
-
-    #     return qs.filter(production_date__month=current_month, production_date__year=current_year)
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -390,25 +349,24 @@ class WarehouseAdmin(admin.ModelAdmin):
 class CuttingEventInline(admin.TabularInline):
     model = CuttingEvent
     extra = 1
-    fields = ('product_production', 'quantity_cut',
-              'is_complete',)
+    fields = ('product', 'quantity_cut')
     autocomplete_fields = ('product_reproduction',)
 
 
 class ProductReProductionAdmin(admin.ModelAdmin):
     inlines = [CuttingEventInline]
     list_display = ['user', 'total_cut',
-                    'get_cutting_events', 're_production_date']
+                    'get_cutting_events', 'date']
     search_fields = ['user__username']
-    list_filter = ['user', 're_production_date']
-    date_hierarchy = 're_production_date'
-    readonly_fields = ('user', 're_production_date')
+    list_filter = ['user', 'date']
+    date_hierarchy = 'date'
+    readonly_fields = ('user', 'date')
 
     change_list_template = 'admin/reproduction_change_list.html'
 
     def get_cutting_events(self, obj):
         cutting_events = obj.cutting.all()
-        return ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' + cutting_event.product_production.product.name) for cutting_event in cutting_events)
+        return ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' + cutting_event.product.name) for cutting_event in cutting_events)
     get_cutting_events.short_description = 'Kesilgan  mahsulotlar'
 
     def total_cut(self, obj):
@@ -441,7 +399,7 @@ class SalesEventInline(admin.TabularInline):
     readonly_fields = ('single_sold_price', 'total_sold_price')
 
     def get_fields(self, request, obj=None):
-        fields = ('cut_product', 'quantity_sold',
+        fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price')
 
         # Check if the user is a superuser
@@ -456,12 +414,12 @@ class SalesEventInline(admin.TabularInline):
 class SalesEventInline2(admin.TabularInline):
     model = SalesEvent2
     extra = 1
-    fields = ('non_cut_product', 'quantity_sold')
+    fields = ('product', 'quantity_sold')
     readonly_fields = ('total_sold_price', 'single_sold_price')
     autocomplete_fields = ('sales',)
 
     def get_fields(self, request, obj=None):
-        fields = ('non_cut_product', 'quantity_sold',
+        fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price')
 
         # Check if the user is a superuser

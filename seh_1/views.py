@@ -445,13 +445,11 @@ def subtract_component_total(sender, instance, created, **kwargs):
 def delete_component_total(sender, instance, **kwargs):
     product_components = instance.product.productcomponent_set.all()
     product = instance.product
-    product.total_new -= instance.quantity + \
-        instance.total_cut + instance.total_sold
+    product.total_new -= instance.quantity
     product.save()
 
     for product_component in product_components:
-        total_quantity_by_component = product_component.quantity * \
-            (instance.quantity + instance.total_cut + instance.total_sold)
+        total_quantity_by_component = product_component.quantity * instance.quantity
         component = product_component.component
         component.total += total_quantity_by_component
         component.save()
