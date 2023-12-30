@@ -1,3 +1,5 @@
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.urls import path
 import plotly.graph_objects as go
 from django.shortcuts import render
@@ -212,19 +214,14 @@ class ProductProductionAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
     change_list_template = 'admin/production_azamat.html'
 
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                date__year=current_year, date__month=current_month)
-
-        return queryset
-
     def changelist_view(self, request, extra_context=None):
+        if not request.GET:
+            current_month = timezone.now().month
+            current_year = timezone.now().year
+            return HttpResponseRedirect(
+                reverse('admin:Azamat_seh_productproduction_changelist') +
+                f'?date__year={current_year}&date__month={current_month}'
+            )
         response = super().changelist_view(request, extra_context=extra_context)
 
         queryset = self.get_queryset(request)
@@ -279,17 +276,6 @@ class WarehouseAdmin(admin.ModelAdmin):
     exclude = ('user', 'price')
 
     # change_list_template = 'admin/warehouse_change_list.html'
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                date__year=current_year, date__month=current_month)
-
-        return queryset
 
     def get_list_display(self, request):
         if request.user.is_superuser:
@@ -298,9 +284,18 @@ class WarehouseAdmin(admin.ModelAdmin):
             return ('__str__', 'user', 'date')
 
     def changelist_view(self, request, extra_context=None):
+        if not request.GET:
+            current_month = timezone.now().month
+            current_year = timezone.now().year
+            return HttpResponseRedirect(
+                reverse('admin:Azamat_seh_warehouse_changelist') +
+                f'?date__year={current_year}&date__month={current_month}'
+            )
         response = super().changelist_view(request, extra_context=extra_context)
 
-        queryset = self.get_queryset(request)
+        cl = response.context_data['cl']
+        queryset = cl.queryset
+
         total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
         formatted_price = "{:,.1f}".format(total_price)
@@ -376,6 +371,13 @@ class SalesAdmin(admin.ModelAdmin):
     change_list_template = 'admin/sales_azamat.html'
 
     def changelist_view(self, request, extra_context=None):
+        if not request.GET:
+            current_month = timezone.now().month
+            current_year = timezone.now().year
+            return HttpResponseRedirect(
+                reverse('admin:Azamat_seh_sales_changelist') +
+                f'?date__year={current_year}&date__month={current_month}'
+            )
         response = super().changelist_view(request, extra_context=extra_context)
 
         # Apply filters and search terms to the queryset
@@ -413,13 +415,6 @@ class SalesAdmin(admin.ModelAdmin):
         else:
             return ['buyer', 'seller',
                     'get_sales_events_user', 'user', 'date']
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.annotate(
-            total_price=Sum('selling_cut__total_sold_price')
-        )
-        return queryset
 
     def get_total_price(self, obj):
         sales_events = obj.selling_cut.all()
