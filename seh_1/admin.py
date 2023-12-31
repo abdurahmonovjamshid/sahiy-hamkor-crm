@@ -20,8 +20,7 @@ from .views import export_warehouse_excel
 
 class CustomUserAdmin(UserAdmin):
     ordering = ['-last_login']
-    list_display = ('username', 'first_name',
-                    'last_name', 'is_staff', 'last_login')
+    list_display = ('username', 'is_staff', 'last_login')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
