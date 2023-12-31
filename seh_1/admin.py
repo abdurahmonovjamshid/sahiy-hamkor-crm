@@ -19,6 +19,7 @@ from .views import export_warehouse_excel
 
 
 class CustomUserAdmin(UserAdmin):
+    ordering = ['-last_login']
     list_display = ('username', 'first_name',
                     'last_name', 'is_staff', 'last_login')
 
