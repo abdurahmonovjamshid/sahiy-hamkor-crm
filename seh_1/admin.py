@@ -170,12 +170,12 @@ class ProductAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
-                'fields': ('name', 'price', 'total_new', 'total_cut', 'total_sold', 'total_sold_price'),
+                'fields': ('name', 'price', 'total_new', 'total_cut', 'total_sold',),
             }),
         )
         if not request.user.is_superuser:
             print('/'*88)
-            price_fields = ('price', 'total_sold_price')
+            price_fields = ('price',)
             fieldsets[0][1]['fields'] = tuple(
                 field for field in fieldsets[0][1]['fields'] if field not in price_fields)
         return fieldsets
@@ -183,20 +183,10 @@ class ProductAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('name', 'tannarx', 'get_price', 'total_new', 'total_cut',
-                    'total_sold', 'non_sold_price', 'get_total_sold_price', 'profit')
+                    'total_sold', 'non_sold_price',)
         else:
             return ('name', 'total_new', 'total_cut',
                     'total_sold')
-
-    def profit(self, obj):
-        product_price = 0
-        for productcomponent in obj.productcomponent_set.all():
-            product_price += productcomponent.quantity*productcomponent.component.price
-
-        formatted_price = "{:,.2f}".format(
-            obj.total_sold_price - (product_price*obj.total_sold))
-        return formatted_price + '$'
-    profit.short_description = 'Foyda'
 
     def get_price(self, obj):
         return "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")+'$'
@@ -230,13 +220,6 @@ class ProductAdmin(admin.ModelAdmin):
         )
         return queryset
 
-    def get_total_sold_price(self, obj):
-        formatted_price = "{:,.2f}".format(
-            obj.total_sold_price).rstrip("0").rstrip(".")
-        return formatted_price+'$'
-    get_total_sold_price.short_description = "Sotilgan tovar narxi"
-    get_total_sold_price.admin_order_field = 'total_sold_price'
-
     change_list_template = 'admin/product_change_list.html'
 
     def changelist_view(self, request, extra_context=None):
@@ -246,10 +229,6 @@ class ProductAdmin(admin.ModelAdmin):
         cl = response.context_data['cl']
         queryset = cl.get_queryset(request)
 
-        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
-            'total_price'] or 0
-        formatted_price = "{:,.2f}".format(total_price).rstrip("0").rstrip(".")
-
         total_product_price = queryset.aggregate(total_product_price=Sum((F('total_new') + F('total_cut'))*F('price')))[
             'total_product_price'] or 0
         formatted_pr_price = "{:,.2f}".format(
@@ -257,7 +236,7 @@ class ProductAdmin(admin.ModelAdmin):
 
         try:
             response.context_data[
-                'summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price}$<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price}$"
+                'summary_line'] = f"Umumiy mavjud tovarlar narxi: {formatted_pr_price}$"
         except:
             pass
         return response
