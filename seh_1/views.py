@@ -38,7 +38,6 @@ def component_export_excel(request):
     filters.pop('p', None)
     filters.pop('all', None)
 
-
     if filters:
         components = components.filter(**filters)
 
@@ -95,7 +94,6 @@ def export_excel(request):
     filters.pop('o', None)
     filters.pop('p', None)
     filters.pop('all', None)
-
 
     if filters:
         products = products.filter(**filters)
@@ -423,6 +421,10 @@ def subtract_component_total(sender, instance, created, **kwargs):
                 instance.quantity
             component = product_component.component
             component.total -= total_quantity_by_component
+
+            if component.total < 0:
+                component.total = 0
+
             component.save()
 
             try:

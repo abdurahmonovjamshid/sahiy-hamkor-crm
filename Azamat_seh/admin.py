@@ -122,7 +122,6 @@ class ProductAdmin(DraggableMPTTAdmin):
             product_price = 0
             for productcomponent in obj.productcomponent_set.all():
                 product_price += productcomponent.quantity*productcomponent.component.price
-            product_price = 1.18*product_price
 
             formatted_price = "{:,.1f}".format(
                 obj.total_sold_price - (product_price*obj.total_sold))
