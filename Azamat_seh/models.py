@@ -63,6 +63,12 @@ class Product(MPTTModel):
         verbose_name = 'Tovar '
         verbose_name_plural = 'Tovarlar'
 
+    def calculate_product_price(self):
+        product_price = 0
+        for productcomponent in self.productcomponent_set.all():
+            product_price += productcomponent.quantity*productcomponent.component.price
+        return product_price
+
     def __str__(self):
         return self.name
 
@@ -159,6 +165,7 @@ class SalesEvent(models.Model):
 
     total_sold_price = models.FloatField(
         verbose_name='Umumiy sotilgan narxi')
+    profit = models.FloatField(default=0, verbose_name='Foyda')
 
     def clean(self):
         super().clean()
@@ -170,6 +177,10 @@ class SalesEvent(models.Model):
     def save(self, *args, **kwargs):
         self.single_sold_price = self.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
+
+        self.profit = self.total_sold_price - \
+            (self.product.calculate_product_price() * self.quantity_sold)
+
         super().save(*args, **kwargs)
 
     class Meta:

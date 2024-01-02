@@ -270,7 +270,7 @@ class SalesEventInline(admin.TabularInline):
     model = SalesEvent
     extra = 1
     autocomplete_fields = ('sales',)
-    readonly_fields = ('single_sold_price', 'total_sold_price')
+    readonly_fields = ('single_sold_price', 'total_sold_price', 'profit')
 
     def get_queryset(self, request):
         current_month = timezone.now().month
@@ -286,13 +286,13 @@ class SalesEventInline(admin.TabularInline):
 
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
-                  'single_sold_price', 'total_sold_price')
+                  'single_sold_price', 'total_sold_price', 'profit')
 
         # Check if the user is a superuser
         if not request.user.is_superuser:
             # Remove the 'single_sold_price' and 'total_sold_price' fields from the inline
             fields = tuple(field for field in fields if field not in (
-                'single_sold_price', 'total_sold_price'))
+                'single_sold_price', 'total_sold_price', 'profit'))
 
         return fields
 
@@ -318,7 +318,6 @@ class SalesAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         # Apply filters and search terms to the queryset
-        queryset = response.get_queryset()
         cl = response.context_data['cl']
         queryset = cl.get_queryset(request)
 
@@ -337,10 +336,15 @@ class SalesAdmin(admin.ModelAdmin):
         total_sold_price = SalesEvent.objects.filter(sales__in=queryset).aggregate(
             total_sold_price=Sum(F('total_sold_price')))['total_sold_price']
 
+        total_profit_price = SalesEvent.objects.filter(sales__in=queryset).aggregate(
+            total_profit_price=Sum(F('profit')))['total_profit_price']
+
         try:
             response.context_data['total'] = "{:,.1f}".format(
                 total_sold_price)+'sum'
             response.context_data['graph'] = div
+            response.context_data['profit'] = "{:,.1f}".format(
+                total_profit_price)+'sum'
         except:
             pass
 
@@ -349,7 +353,7 @@ class SalesAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ['buyer', 'seller',
-                    'get_sales_events', 'get_total_price', 'user', 'date']
+                    'get_sales_events', 'get_total_price', 'get_total_profit', 'user', 'date']
         else:
             return ['buyer', 'seller',
                     'get_sales_events_user', 'user', 'date']
@@ -360,9 +364,15 @@ class SalesAdmin(admin.ModelAdmin):
 
         formatted_price = "{:,.1f}".format(total_price)
         return formatted_price+' sum'
+    get_total_price.short_description = 'Umumiy Narx'
 
-    get_total_price.short_description = 'Narx'
-    get_total_price.admin_order_field = 'total_price'
+    def get_total_profit(self, obj):
+        sales_events = obj.selling_cut.all()
+        total_price = sum(event.profit for event in sales_events)
+
+        formatted_price = "{:,.1f}".format(total_price)
+        return formatted_price+' sum'
+    get_total_profit.short_description = 'Umumiy Foyda'
 
     def get_sales_events(self, obj):
         sales_events = obj.selling_cut.all()
