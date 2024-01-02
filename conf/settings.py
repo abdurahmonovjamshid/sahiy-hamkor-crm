@@ -124,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Sahiy Hamkor",
+    "site_title": "Saxiy Hamkor",
     "site_header": "Library",
     "site_brand": "Saxiy Hamkor",
     "site_logo": "logo/logo.png",
