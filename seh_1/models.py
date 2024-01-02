@@ -56,8 +56,6 @@ class Product(models.Model):
         default=0, verbose_name="Kesilmaganlar soni")
     total_cut = models.IntegerField(
         default=0, verbose_name="Kesilganlar soni")
-    total_sold = models.IntegerField(
-        default=0, verbose_name="sotilganlar soni")
 
     class Meta:
         verbose_name = 'Produkt '
@@ -71,34 +69,6 @@ class Product(models.Model):
         for productcomponent in self.productcomponent_set.all():
             product_price += productcomponent.quantity*productcomponent.component.price
         return product_price
-
-    def export_excel(self, request):
-        products = self.get_queryset(request)
-
-        # Create a new workbook
-        workbook = Workbook()
-        worksheet = workbook.active
-
-        # Write headers
-        # Example headers, adjust as per your model fields
-        headers = ['Name', 'Price', 'Quantity']
-        worksheet.append(headers)
-
-        # Write data rows
-        for product in products:
-            # Example data, adjust as per your model fields
-            row = [product.name, product.price, product.quantity]
-            worksheet.append(row)
-
-        # Set the response headers for file download
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=products.xlsx'
-
-        # Save workbook to response
-        workbook.save(response)
-
-        return response
 
 
 class ProductComponent(models.Model):
@@ -243,7 +213,8 @@ class SalesEvent(models.Model):
         self.single_sold_price = self.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
 
-        self.profit = self.total_sold_price - (self.product.calculate_product_price() * self.quantity_sold)
+        self.profit = self.total_sold_price - \
+            (self.product.calculate_product_price() * self.quantity_sold)
 
         super().save(*args, **kwargs)
 
@@ -283,7 +254,8 @@ class SalesEvent2(models.Model):
         self.single_sold_price = self.product.price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
 
-        self.profit = self.total_sold_price - (self.product.calculate_product_price() * self.quantity_sold)
+        self.profit = self.total_sold_price - \
+            (self.product.calculate_product_price() * self.quantity_sold)
 
         super().save(*args, **kwargs)
 

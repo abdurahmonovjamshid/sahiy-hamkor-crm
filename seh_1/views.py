@@ -99,8 +99,8 @@ def export_excel(request):
         products = products.filter(**filters)
 
     # Write headers
-    headers = ['Nomi', 'Tan narxi', 'Sotuv narxi', 'Kesilmaganlar soni', 'Kesilganlar soni',
-               'Sotilganlar soni', 'Mavjud tovar narxi',]
+    headers = ['Nomi', 'Tan narxi', 'Sotuv narxi',
+               'Kesilmaganlar soni', 'Kesilganlar soni', 'Mavjud tovar narxi',]
     worksheet.append(headers)
 
     # Write data rows
@@ -116,7 +116,6 @@ def export_excel(request):
             str(product.price)+'$',
             product.total_new,
             product.total_cut,
-            product.total_sold,
             "{:,.1f}".format(
                 (product.total_new + product.total_cut)*product.price),
         ]
@@ -514,7 +513,6 @@ def sales_create(sender, instance, created, **kwargs):
     if created:
         product = instance.product
         product.total_cut -= instance.quantity_sold
-        product.total_sold += instance.quantity_sold
         product.save()
 
 
@@ -523,7 +521,6 @@ def sales_delete(sender, instance, **kwargs):
 
     product = instance.product
     product.total_cut += instance.quantity_sold
-    product.total_sold -= instance.quantity_sold
     product.save()
 
     try:
@@ -539,7 +536,6 @@ def sales2_create(sender, instance, created, **kwargs):
     if created:
         product = instance.product
         product.total_new -= instance.quantity_sold
-        product.total_sold += instance.quantity_sold
         product.save()
 
 
@@ -547,7 +543,6 @@ def sales2_create(sender, instance, created, **kwargs):
 def sales2_delete(sender, instance, **kwargs):
     product = instance.product
     product.total_new += instance.quantity_sold
-    product.total_sold -= instance.quantity_sold
     product.save()
 
     sales = instance.sales

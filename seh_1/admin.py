@@ -170,7 +170,7 @@ class ProductAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
-                'fields': ('name', 'price', 'total_new', 'total_cut', 'total_sold',),
+                'fields': ('name', 'price', 'total_new', 'total_cut'),
             }),
         )
         if not request.user.is_superuser:
@@ -182,11 +182,9 @@ class ProductAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('name', 'tannarx', 'get_price', 'total_new', 'total_cut',
-                    'total_sold', 'non_sold_price',)
+            return ('name', 'tannarx', 'get_price', 'total_new', 'total_cut', 'non_sold_price',)
         else:
-            return ('name', 'total_new', 'total_cut',
-                    'total_sold')
+            return ('name', 'total_new', 'total_cut',)
 
     def get_price(self, obj):
         return "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")+'$'
