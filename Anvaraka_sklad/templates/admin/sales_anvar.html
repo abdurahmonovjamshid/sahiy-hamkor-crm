@@ -8,15 +8,25 @@
             <a href="{{ export_url }}?{{ request.GET.urlencode }}" class="button">Export Excel</a> {% endcomment %}
         </div>
     </div>
-    {% if currency_totals and request.user.is_superuser %}
+    {% if request.user.is_superuser %}
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
         <div>
-            <h3>Umumiy narxlar:</h3>
+            <h3>Umumiy sotuv narxlari:</h3>
             <ul>
             {% for currency, total_price in currency_totals.items %}
                 <li>{{ currency }}: {{ total_price }}</li>
             {% endfor %}
             </ul>
         </div>
+        <div>
+            <h3>Umumiy foyda:</h3>
+            <ul>
+            {% for currency, total_price in currency_profits.items %}
+                <li>{{ currency }}: {{ total_price }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
     {% endif %}
     {{ block.super }}
 {% endblock %}

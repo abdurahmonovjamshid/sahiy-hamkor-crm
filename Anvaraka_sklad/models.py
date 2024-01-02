@@ -130,6 +130,7 @@ class Sales(models.Model):
 
     price = models.FloatField(default=0, verbose_name='Narxi')
     total_price = models.FloatField(default=0, verbose_name='Umumiy narxi')
+    profit = models.FloatField(default=0, verbose_name='Foyda')
 
     class Meta:
         verbose_name = 'Sotilgan tovar '
@@ -141,6 +142,10 @@ class Sales(models.Model):
     def save(self, *args, **kwargs):
         self.price = self.component.sell_price
         self.total_price = self.price * self.quantity*self.quantity_in_measurement
+
+        self.profit = self.total_price-(self.component.price *
+                                        self.quantity*self.quantity_in_measurement)
+
         super().save(*args, **kwargs)
 
 

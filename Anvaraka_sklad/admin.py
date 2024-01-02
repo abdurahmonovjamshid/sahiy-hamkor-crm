@@ -219,10 +219,22 @@ class SalesEventtInline(admin.TabularInline):
 class SalesInline(admin.TabularInline):
     model = Sales
     extra = 1
-    fields = ['component', 'quantity', 'quantity_in_measurement',]
+    readonly_fields = ['total_price', 'profit']
     autocomplete_fields = ['selling']
     verbose_name_plural = 'Sotilgan tovarlar '
     verbose_name = 'tovarlar'
+
+    def get_fields(self, request, obj=None):
+        fields = ('component', 'quantity',
+                  'quantity_in_measurement', 'total_price', 'profit')
+
+        # Check if the user is a superuser
+        if not request.user.is_superuser:
+            # Remove the 'single_sold_price' and 'total_sold_price' fields from the inline
+            fields = tuple(field for field in fields if field not in (
+                'total_price', 'profit'))
+
+        return fields
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -252,8 +264,9 @@ class SellingAdmin(admin.ModelAdmin):
     def get_sold_products(self, obj):
         sales = obj.sales_set.values(
             'component__title', 'component__currency', 'component__measurement').annotate(
-                total_price=Sum('total_price')).annotate(total_measurement=Sum(F('quantity')*F('quantity_in_measurement')))
-        return mark_safe("<br>".join(f"{text['total_measurement']}{text['component__measurement']} {text['component__title']} - {text['total_price']:,.1f}{text['component__currency']}"
+                total_price=Sum('total_price')).annotate(
+                profit=Sum('profit')).annotate(total_measurement=Sum(F('quantity')*F('quantity_in_measurement')))
+        return mark_safe("<br>".join(f"{text['total_measurement']}{text['component__measurement']} {text['component__title']} - {text['total_price']:,.1f}{text['component__currency']} - ({text['profit']:,.1f}{text['component__currency']})"
                                      for text in sales
                                      ))
 
@@ -298,6 +311,29 @@ class SellingAdmin(admin.ModelAdmin):
 
         try:
             response.context_data['currency_totals'] = formatted_currency_totals
+        except:
+            pass
+
+        ############ profit ############
+        currency_totals = queryset.values('sales__component__currency').annotate(
+            total_price=Sum('sales__profit'))
+
+        # Create a dictionary to store the formatted currency totals
+        formatted_currency_totals = {}
+        for currency_total in currency_totals:
+            currency = currency_total['sales__component__currency']
+            total_price = currency_total['total_price'] or Decimal('0')
+            if currency in formatted_currency_totals:
+                formatted_currency_totals[currency] += total_price
+            else:
+                formatted_currency_totals[currency] = total_price
+
+        for currency, total_price in formatted_currency_totals.items():
+            formatted_price = "{:,.1f}".format(total_price)
+            formatted_currency_totals[currency] = formatted_price
+
+        try:
+            response.context_data['currency_profits'] = formatted_currency_totals
         except:
             pass
 
