@@ -98,7 +98,7 @@ class ProductAdmin(DraggableMPTTAdmin):
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new',
-                    'get_total_sold', 'non_sold_price', 'get_total_sold_price', 'profit')
+                    'get_total_sold', 'non_sold_price',)
         else:
             return ('tree_actions', 'indented_title', 'get_total_new',
                     'get_total_sold')
@@ -117,26 +117,12 @@ class ProductAdmin(DraggableMPTTAdmin):
             return '-'
     get_total_sold.short_description = 'Sotilganlar soni'
 
-    def profit(self, obj):
-        if obj.parent:
-            product_price = 0
-            for productcomponent in obj.productcomponent_set.all():
-                product_price += productcomponent.quantity*productcomponent.component.price
-
-            formatted_price = "{:,.1f}".format(
-                obj.total_sold_price - (product_price*obj.total_sold))
-            return formatted_price + ' sum'
-        else:
-            return '-'
-    profit.short_description = 'Foyda'
-
     def get_price(self, obj):
         if obj.parent:
             return str(obj.price)+' sum'
         else:
             return '-'
     get_price.short_description = 'Sotuv narxi'
-    get_price.admin_order_field = 'price'
 
     def non_sold_price(self, obj):
         if obj.parent:
@@ -148,7 +134,6 @@ class ProductAdmin(DraggableMPTTAdmin):
                 total_price=Sum(F('total_new') * F('price')))['total_price']
             return "{:,.1f}".format(total_price)+'sum'
     non_sold_price.short_description = 'Mavjud tovar narxi'
-    non_sold_price.admin_order_field = 'non_sold_price'
 
     def tannarx(self, obj):
         if obj.parent:
@@ -159,30 +144,6 @@ class ProductAdmin(DraggableMPTTAdmin):
         else:
             return '-'
     tannarx.short_description = 'Tan narxi'
-    tannarx.admin_order_field = 'single_product_price'
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.annotate(
-            single_product_price=Sum(
-                F('productcomponent__quantity') * F('productcomponent__component__price')*1.18)
-        )
-        queryset = queryset.annotate(
-            non_sold_price=Sum(
-                F('price') * F('total_new'))
-        )
-        return queryset
-
-    def get_total_sold_price(self, obj):
-        if obj.parent:
-            formatted_price = "{:,.1f}".format(obj.total_sold_price)
-            return formatted_price+' sum'
-        else:
-            total_sold_price = obj.children.aggregate(
-                total_sold_price=Sum('total_sold_price'))['total_sold_price']
-            return "{:,.1f}".format(total_sold_price)+'sum'
-    get_total_sold_price.short_description = "Sotilgan tovar narxi"
-    get_total_sold_price.admin_order_field = 'total_sold_price'
 
     # change_list_template = 'admin/product_change_list.html'
 
