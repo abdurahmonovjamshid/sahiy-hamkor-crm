@@ -204,7 +204,7 @@ class ProductAdmin(admin.ModelAdmin):
         product_price = 0
         for productcomponent in obj.productcomponent_set.all():
             product_price += productcomponent.quantity*productcomponent.component.price
-        return "{:,.2f}".format(product_price*1.18)+'$'
+        return "{:,.2f}".format(product_price)+'$'
     tannarx.short_description = 'Tan narxi'
     tannarx.admin_order_field = 'single_product_price'
 
@@ -212,7 +212,7 @@ class ProductAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
             single_product_price=Sum(
-                F('productcomponent__quantity') * F('productcomponent__component__price')*1.18)
+                F('productcomponent__quantity') * F('productcomponent__component__price'))
         )
         queryset = queryset.annotate(
             non_sold_price=Sum(
@@ -407,17 +407,17 @@ class SalesEventInline(admin.TabularInline):
     model = SalesEvent
     extra = 1
     autocomplete_fields = ('sales',)
-    readonly_fields = ('single_sold_price', 'total_sold_price')
+    readonly_fields = ('single_sold_price', 'total_sold_price', 'profit')
 
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
-                  'single_sold_price', 'total_sold_price')
+                  'single_sold_price', 'total_sold_price', 'profit')
 
         # Check if the user is a superuser
         if not request.user.is_superuser:
             # Remove the 'single_sold_price' and 'total_sold_price' fields from the inline
             fields = tuple(field for field in fields if field not in (
-                'single_sold_price', 'total_sold_price'))
+                'single_sold_price', 'total_sold_price', 'profit'))
 
         return fields
 
@@ -426,7 +426,7 @@ class SalesEventInline2(admin.TabularInline):
     model = SalesEvent2
     extra = 1
     fields = ('product', 'quantity_sold')
-    readonly_fields = ('total_sold_price', 'single_sold_price')
+    readonly_fields = ('total_sold_price', 'single_sold_price', 'profit')
     autocomplete_fields = ('sales',)
 
     def get_queryset(self, request):
@@ -443,13 +443,13 @@ class SalesEventInline2(admin.TabularInline):
 
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
-                  'single_sold_price', 'total_sold_price')
+                  'single_sold_price', 'total_sold_price', 'profit')
 
         # Check if the user is a superuser
         if not request.user.is_superuser:
             # Remove the 'single_sold_price' and 'total_sold_price' fields from the inline
             fields = tuple(field for field in fields if field not in (
-                'single_sold_price', 'total_sold_price'))
+                'single_sold_price', 'total_sold_price', 'profit'))
 
         return fields
 
@@ -479,18 +479,10 @@ class SalesAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         if request.user.is_superuser:
             return ['buyer', 'seller',
-                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'user', 'date']
+                    'get_sales_events', 'get_sales_event2s', 'get_total_price', 'get_total_profit', 'user', 'date']
         else:
             return ['buyer', 'seller',
                     'get_sales_events_user', 'get_sales_event2s_user', 'user', 'date']
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.annotate(
-            total_price=Sum('selling_cut__total_sold_price') +
-            Sum('selling__total_sold_price')
-        )
-        return queryset
 
     def get_total_price(self, obj):
         sales_events = obj.selling_cut.all()
@@ -502,8 +494,19 @@ class SalesAdmin(admin.ModelAdmin):
             total_price + total_price2).rstrip("0").rstrip(".")
         return formatted_price+'$'
 
-    get_total_price.short_description = 'Narx'
-    get_total_price.admin_order_field = 'total_price'
+    get_total_price.short_description = 'Umumiy narx'
+
+    def get_total_profit(self, obj):
+        sales_events = obj.selling_cut.all()
+        total_price = sum(event.profit for event in sales_events)
+
+        sales_events2 = obj.selling.all()
+        total_price2 = sum(event.profit for event in sales_events2)
+        formatted_price = "{:,.2f}".format(
+            total_price + total_price2).rstrip("0").rstrip(".")
+        return formatted_price+'$'
+
+    get_total_profit.short_description = 'Umumiy foyda'
 
     def get_sales_events(self, obj):
         sales_events = obj.selling_cut.all()

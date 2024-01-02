@@ -526,9 +526,12 @@ def sales_delete(sender, instance, **kwargs):
     product.total_sold -= instance.quantity_sold
     product.save()
 
-    sales = instance.sales
-    if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
-        sales.delete()
+    try:
+        sales = instance.sales
+        if sales.selling_cut.all().count() == 0 and sales.selling.all().count() == 0:
+            sales.delete()
+    except:
+        pass
 
 
 @receiver(post_save, sender=SalesEvent2)
