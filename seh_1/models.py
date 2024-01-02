@@ -219,8 +219,8 @@ class SalesEvent(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = 'Kesilgan mahsulot'
-        verbose_name_plural = 'Kesilgan mahsulotlar'
+        verbose_name = 'Tayyor mahsulot'
+        verbose_name_plural = 'Tayyor mahsulotlar'
         unique_together = ['product', 'sales']
 
     def __str__(self):
@@ -260,8 +260,8 @@ class SalesEvent2(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = 'Kesilmagan mahsulot'
-        verbose_name_plural = 'Kesilmagan mahsulot'
+        verbose_name = 'Yaroqsiz mahsulot'
+        verbose_name_plural = 'Yaroqsiz mahsulot'
         unique_together = ['product', 'sales']
 
     def __str__(self):

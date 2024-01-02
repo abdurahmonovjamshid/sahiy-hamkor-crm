@@ -378,13 +378,13 @@ class SalesAdmin(admin.ModelAdmin):
         sales_events = obj.selling_cut.all()
         return ", ".join(str(sale_event)+f' ({sale_event.single_sold_price} sum dan)' for sale_event in sales_events)
 
-    get_sales_events.short_description = 'Kesilgan mahsulotlar'
+    get_sales_events.short_description = 'Ishlab chiqarilgan mahsulotlar'
 
     def get_sales_events_user(self, obj):
         sales_events = obj.selling_cut.all()
         return ", ".join(str(sale_event) for sale_event in sales_events)
 
-    get_sales_events_user.short_description = 'Kesilgan mahsulotlar'
+    get_sales_events_user.short_description = 'Ishlab chiqarilgan mahsulotlar'
 
     def save_model(self, request, obj, form, change):
         # Set the current logged-in user as the seller
