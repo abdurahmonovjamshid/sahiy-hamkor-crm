@@ -140,7 +140,7 @@ class ProductAdmin(DraggableMPTTAdmin):
             product_price = 0
             for productcomponent in obj.productcomponent_set.all():
                 product_price += productcomponent.quantity*productcomponent.component.price
-            return "{:,.1f}".format(product_price*1.18)+' sum'
+            return "{:,.1f}".format(product_price)+' sum'
         else:
             return '-'
     tannarx.short_description = 'Tan narxi'
