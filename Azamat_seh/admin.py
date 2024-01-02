@@ -85,23 +85,21 @@ class ProductAdmin(DraggableMPTTAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
-                'fields': ('parent', 'name', 'price', 'total_new', 'total_sold', 'total_sold_price'),
+                'fields': ('parent', 'name', 'price', 'total_new',),
             }),
         )
         if not request.user.is_superuser:
             print('/'*88)
-            price_fields = ('price', 'total_sold_price')
+            price_fields = ('price',)
             fieldsets[0][1]['fields'] = tuple(
                 field for field in fieldsets[0][1]['fields'] if field not in price_fields)
         return fieldsets
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new',
-                    'get_total_sold', 'non_sold_price',)
+            return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new', 'non_sold_price',)
         else:
-            return ('tree_actions', 'indented_title', 'get_total_new',
-                    'get_total_sold')
+            return ('tree_actions', 'indented_title', 'get_total_new',)
 
     def get_total_new(self, obj):
         if obj.parent:
@@ -144,27 +142,6 @@ class ProductAdmin(DraggableMPTTAdmin):
         else:
             return '-'
     tannarx.short_description = 'Tan narxi'
-
-    # change_list_template = 'admin/product_change_list.html'
-
-    def changelist_view(self, request, extra_context=None):
-        response = super().changelist_view(request, extra_context=extra_context)
-
-        queryset = self.get_queryset(request)
-        total_price = queryset.aggregate(total_price=Sum('total_sold_price'))[
-            'total_price'] or 0
-        formatted_price = "{:,.1f}".format(total_price)
-
-        total_product_price = queryset.aggregate(total_product_price=Sum(F('total_new')*F('price')))[
-            'total_product_price'] or 0
-        formatted_pr_price = "{:,.1f}".format(total_product_price)
-
-        try:
-            response.context_data[
-                ' summary_line'] = f"Umumiy sotilgan tovarlar narxi: {formatted_price} sum<hr>Umumiy mavjud tovarlar narxi: {formatted_pr_price} sum"
-        except:
-            pass
-        return response
 
 
 class ProductProductionAdmin(admin.ModelAdmin):
@@ -341,6 +318,7 @@ class SalesAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         # Apply filters and search terms to the queryset
+        queryset = response.get_queryset()
         cl = response.context_data['cl']
         queryset = cl.get_queryset(request)
 

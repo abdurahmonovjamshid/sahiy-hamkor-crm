@@ -83,8 +83,6 @@ def sales_create(sender, instance, created, **kwargs):
         try:
             product = instance.product
             product.total_new -= instance.quantity_sold
-            product.total_sold += instance.quantity_sold
-            product.total_sold_price += instance.total_sold_price
             product.save()
 
         except Exception as e:
@@ -96,8 +94,6 @@ def sales_delete(sender, instance, **kwargs):
     try:
         product = instance.product
         product.total_new += instance.quantity_sold
-        product.total_sold -= instance.quantity_sold
-        product.total_sold_price -= instance.total_sold_price
         product.save()
 
         sales = instance.sales

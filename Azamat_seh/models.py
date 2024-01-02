@@ -58,10 +58,6 @@ class Product(MPTTModel):
 
     total_new = models.IntegerField(
         default=0, verbose_name="Ishlab chiqarilganlar soni")
-    total_sold = models.IntegerField(
-        default=0, verbose_name="Sotilganlar soni")
-    total_sold_price = models.FloatField(
-        verbose_name='Umumiy sotilgan narxi', default=0)
 
     class Meta:
         verbose_name = 'Tovar '
