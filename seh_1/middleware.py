@@ -12,9 +12,10 @@ class ComponentNotificationMiddleware:
         # Check if any child component has a total value below the limit
         child_components = Component.objects.filter(
             parent__isnull=False, total__lt=F('notification_limit'))
-        if child_components.exists():
+        if child_components.exists() and not request.session.get('warning_message_displayed'):
             message = f"Child component(s) with total value below the limit: {', '.join(child_components.values_list('title', flat=True))}"
             messages.warning(request, message)
+            request.session['warning_message_displayed'] = True
 
         response = self.get_response(request)
         return response
