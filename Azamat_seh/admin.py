@@ -164,8 +164,11 @@ class ProductProductionAdmin(admin.ModelAdmin):
         queryset = self.get_queryset(request)
 
         # Apply filters and search terms to the queryset
-        cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         # Calculate total price
 
@@ -230,8 +233,11 @@ class WarehouseAdmin(admin.ModelAdmin):
             )
         response = super().changelist_view(request, extra_context=extra_context)
 
-        cl = response.context_data['cl']
-        queryset = cl.queryset
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
@@ -271,19 +277,7 @@ class SalesEventInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ('sales',)
     readonly_fields = ('single_sold_price', 'total_sold_price', 'profit')
-
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                date__year=current_year, date__month=current_month)
-
-        return queryset
-
+    
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price', 'profit')
@@ -318,8 +312,11 @@ class SalesAdmin(admin.ModelAdmin):
         response = super().changelist_view(request, extra_context=extra_context)
 
         # Apply filters and search terms to the queryset
-        cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         sales_events = SalesEvent.objects.filter(sales__in=queryset)
 

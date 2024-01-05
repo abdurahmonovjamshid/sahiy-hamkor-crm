@@ -83,9 +83,11 @@ class ComponentAdmin(DraggableMPTTAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        # queryset = self.get_queryset(request)
-        cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         total_price = queryset.aggregate(total_price=Sum(F('price')*F('total')))[
             'total_price'] or 0
@@ -223,9 +225,11 @@ class ProductAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
 
-        # queryset = self.get_queryset(request)
-        cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         total_product_price = queryset.aggregate(total_product_price=Sum((F('total_new') + F('total_cut'))*F('price')))[
             'total_product_price'] or 0
@@ -306,8 +310,11 @@ class WarehouseAdmin(admin.ModelAdmin):
 
         response = super().changelist_view(request, extra_context=extra_context)
 
-        cl = response.context_data['cl']
-        queryset = cl.queryset
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         total_price = queryset.aggregate(total_price=Sum('price'))[
             'total_price'] or 0
@@ -427,17 +434,6 @@ class SalesEventInline2(admin.TabularInline):
     readonly_fields = ('total_sold_price', 'single_sold_price', 'profit')
     autocomplete_fields = ('sales',)
 
-    def get_queryset(self, request):
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        queryset = super().get_queryset(request)
-
-        # Check if any filter is already applied
-        if not request.GET:
-            queryset = queryset.filter(
-                date__year=current_year, date__month=current_month)
-
-        return queryset
 
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',

@@ -3,7 +3,6 @@ from django.http import HttpResponseRedirect
 from django.db.models import Case, F, Sum, Value, When
 from django.utils import timezone
 from datetime import datetime
-from decimal import Decimal
 from django.utils.safestring import mark_safe
 from django.contrib import admin
 from django.db.models import F, Sum
@@ -153,10 +152,11 @@ class WarehouseAdmin(admin.ModelAdmin):
             )
         response = super().changelist_view(request, extra_context=extra_context)
 
-        # queryset = self.get_queryset(request)
-
-        cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         # Calculate total prices for each currency
         currency_totals = queryset.values('component__currency').annotate(
@@ -166,7 +166,7 @@ class WarehouseAdmin(admin.ModelAdmin):
         formatted_currency_totals = {}
         for currency_total in currency_totals:
             currency = currency_total['component__currency']
-            total_price = currency_total['total_price'] or Decimal('0')
+            total_price = currency_total['total_price'] or 0
             if currency in formatted_currency_totals:
                 formatted_currency_totals[currency] += total_price
             else:
@@ -257,7 +257,7 @@ class SellingAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('buyer', 'get_sold_products', 'get_paid', 'user', 'sold_time')
+            return ('buyer', 'get_sold_products', 'total_price', 'get_paid', 'user', 'sold_time')
         else:
             return ('buyer', 'get_sold_products_user', 'user', 'sold_time')
 
@@ -286,10 +286,11 @@ class SellingAdmin(admin.ModelAdmin):
             )
         response = super().changelist_view(request, extra_context=extra_context)
 
-        # queryset = self.get_queryset(request)
-
-        cl = response.context_data['cl']
-        queryset = cl.get_queryset(request)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
 
         # Calculate total prices for each currency
         currency_totals = queryset.values('sales__component__currency').annotate(
@@ -299,7 +300,7 @@ class SellingAdmin(admin.ModelAdmin):
         formatted_currency_totals = {}
         for currency_total in currency_totals:
             currency = currency_total['sales__component__currency']
-            total_price = currency_total['total_price'] or Decimal('0')
+            total_price = currency_total['total_price'] or 0
             if currency in formatted_currency_totals:
                 formatted_currency_totals[currency] += total_price
             else:
@@ -322,7 +323,7 @@ class SellingAdmin(admin.ModelAdmin):
         formatted_currency_totals = {}
         for currency_total in currency_totals:
             currency = currency_total['sales__component__currency']
-            total_price = currency_total['total_price'] or Decimal('0')
+            total_price = currency_total['total_price'] or 0
             if currency in formatted_currency_totals:
                 formatted_currency_totals[currency] += total_price
             else:
@@ -345,6 +346,13 @@ class SellingAdmin(admin.ModelAdmin):
         return total_paid
 
     get_paid.short_description = "To'langan"
+
+    def total_price(self, obj):
+        return obj.total_price()
+
+        return total_paid
+
+    total_price.short_description = "Umumiy narx(lar)"
 
     def save_model(self, request, obj, form, change):
         if not obj.user_id:

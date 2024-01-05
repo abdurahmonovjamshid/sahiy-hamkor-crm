@@ -108,15 +108,22 @@ class Selling(models.Model):
         verbose_name = 'Sotilgan Mahsulot '
         verbose_name_plural = 'Sotuvlar'
 
-    def __str__(self):
-        return self.buyer
-
     def get_total_price_by_currency(self):
         total_price = self.payment.values(
             'currency').annotate(total=Sum('price'))
         currency_totals = " va ".join(
             f"{item['total']:,.1f}{item['currency']}" for item in total_price)
         return currency_totals
+
+    def total_price(self):
+        total_price = self.sales_set.values(
+            'component__currency').annotate(total=Sum('total_price'))
+        currency_totals = " va ".join(
+            f"{item['total']:,.1f}{item['component__currency']}" for item in total_price)
+        return currency_totals
+
+    def __str__(self):
+        return self.buyer+' '+self.total_price()
 
 
 class Sales(models.Model):
