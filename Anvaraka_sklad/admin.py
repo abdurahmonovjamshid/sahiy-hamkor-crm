@@ -143,7 +143,8 @@ class WarehouseAdmin(admin.ModelAdmin):
             return ('__str__', 'user', 'arrival_time')
 
     def changelist_view(self, request, extra_context=None):
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             current_month = timezone.now().month
             current_year = timezone.now().year
             return HttpResponseRedirect(
@@ -277,7 +278,8 @@ class SellingAdmin(admin.ModelAdmin):
         )
 
     def changelist_view(self, request, extra_context=None):
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             current_month = timezone.now().month
             current_year = timezone.now().year
             return HttpResponseRedirect(

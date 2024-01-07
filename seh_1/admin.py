@@ -260,7 +260,8 @@ class ProductProductionAdmin(admin.ModelAdmin):
         current_year = timezone.now().year
 
         # Redirect to the current month's view
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             url = reverse('admin:seh_1_productproduction_changelist')
             url += f'?date__year={current_year}&date__month={current_month}'
             return HttpResponseRedirect(url)
@@ -300,7 +301,8 @@ class WarehouseAdmin(admin.ModelAdmin):
             return ('__str__', 'user', 'arrival_time')
 
     def changelist_view(self, request, extra_context=None):
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             current_month = timezone.now().month
             current_year = timezone.now().year
             return HttpResponseRedirect(
@@ -373,7 +375,8 @@ class ProductReProductionAdmin(admin.ModelAdmin):
         current_year = timezone.now().year
 
         # Redirect to the current month's view
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             url = reverse('admin:seh_1_productreproduction_changelist')
             url += f'?date__year={current_year}&date__month={current_month}'
             return HttpResponseRedirect(url)
@@ -434,7 +437,6 @@ class SalesEventInline2(admin.TabularInline):
     readonly_fields = ('total_sold_price', 'single_sold_price', 'profit')
     autocomplete_fields = ('sales',)
 
-
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price', 'profit')
@@ -463,7 +465,8 @@ class SalesAdmin(admin.ModelAdmin):
         current_year = timezone.now().year
 
         # Redirect to the current month's view
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             url = reverse('admin:seh_1_sales_changelist')
             url += f'?date__year={current_year}&date__month={current_month}'
             return HttpResponseRedirect(url)

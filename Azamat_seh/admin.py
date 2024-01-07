@@ -152,7 +152,8 @@ class ProductProductionAdmin(admin.ModelAdmin):
     change_list_template = 'admin/production_azamat.html'
 
     def changelist_view(self, request, extra_context=None):
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             current_month = timezone.now().month
             current_year = timezone.now().year
             return HttpResponseRedirect(
@@ -224,7 +225,8 @@ class WarehouseAdmin(admin.ModelAdmin):
             return ('__str__', 'user', 'date')
 
     def changelist_view(self, request, extra_context=None):
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             current_month = timezone.now().month
             current_year = timezone.now().year
             return HttpResponseRedirect(
@@ -302,7 +304,8 @@ class SalesAdmin(admin.ModelAdmin):
     change_list_template = 'admin/sales_azamat.html'
 
     def changelist_view(self, request, extra_context=None):
-        if not request.GET:
+        if not request.GET and not request.session.get('current_page') == request.path:
+            request.session['current_page'] = request.path
             current_month = timezone.now().month
             current_year = timezone.now().year
             return HttpResponseRedirect(
