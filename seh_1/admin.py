@@ -470,8 +470,28 @@ class SalesAdmin(admin.ModelAdmin):
             url = reverse('admin:seh_1_sales_changelist')
             url += f'?date__year={current_year}&date__month={current_month}'
             return HttpResponseRedirect(url)
+        response = super().changelist_view(request, extra_context=extra_context)
 
-        return super().changelist_view(request, extra_context)
+        try:
+            cl = response.context_data['cl']
+            queryset = cl.get_queryset(request)
+        except:
+            queryset = self.get_queryset(request)
+
+        total_price = queryset.aggregate(
+            total_price=Sum('selling_cut__total_sold_price'))['total_price']
+        total_profit = queryset.aggregate(
+            total_profit=Sum('selling_cut__profit'))['total_profit']
+
+        try:
+            response.context_data['total_price'] = "{:,.1f}".format(
+                total_price)+'$'
+            response.context_data['total_profit'] = "{:,.1f}".format(
+                total_profit)+'$'
+        except Exception as e:
+            print(e)
+
+        return response
 
     def get_list_display(self, request):
         if request.user.is_superuser:

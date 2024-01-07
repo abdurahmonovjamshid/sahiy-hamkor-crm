@@ -12,5 +12,21 @@
         </div>
     </div>
 {% endif %}
+{% if request.user.is_superuser %}
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <div>
+                <h3>Umumiy sotuv narxi:</h3>
+                <ul>
+                    <li>{{ total_price }}</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Umumiy foyda:</h3>
+                <ul>
+                    <li>{{ total_profit }}</li>
+                </ul>
+            </div>
+        </div>
+    {% endif %}
     {{ block.super }}
 {% endblock %}
