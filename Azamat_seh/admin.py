@@ -129,7 +129,7 @@ class ProductAdmin(DraggableMPTTAdmin):
             return formatted_price+' sum'
         else:
             total_price = obj.children.aggregate(
-                total_price=Sum(F('total_new') * F('price')))['total_price']
+                total_price=Sum(F('total_new') * F('price')))['total_price'] or 0
             return "{:,.1f}".format(total_price)+'sum'
     non_sold_price.short_description = 'Mavjud tovar narxi'
 
