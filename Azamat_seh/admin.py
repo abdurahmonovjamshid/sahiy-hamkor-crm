@@ -82,6 +82,8 @@ class ProductAdmin(DraggableMPTTAdmin):
     list_filter = ['name']
     search_fields = ('name',)
 
+    change_list_template = 'admin/product_change.html'
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
@@ -279,7 +281,7 @@ class SalesEventInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ('sales',)
     readonly_fields = ('single_sold_price', 'total_sold_price', 'profit')
-    
+
     def get_fields(self, request, obj=None):
         fields = ('product', 'quantity_sold',
                   'single_sold_price', 'total_sold_price', 'profit')
