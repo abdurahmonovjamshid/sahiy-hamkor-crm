@@ -82,7 +82,7 @@ class ProductAdmin(DraggableMPTTAdmin):
     list_filter = ['name']
     search_fields = ('name',)
 
-    # change_list_template = 'admin/product_change.html'
+    change_list_template = 'admin/product_change.html'
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -97,11 +97,11 @@ class ProductAdmin(DraggableMPTTAdmin):
                 field for field in fieldsets[0][1]['fields'] if field not in price_fields)
         return fieldsets
 
-    # def get_list_display(self, request):
-    #     if request.user.is_superuser:
-    #         return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new', 'non_sold_price',)
-    #     else:
-    #         return ('tree_actions', 'indented_title', 'get_total_new',)
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new', 'non_sold_price',)
+        else:
+            return ('tree_actions', 'indented_title', 'get_total_new',)
 
     def get_total_new(self, obj):
         if obj.parent:
