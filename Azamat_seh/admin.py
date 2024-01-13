@@ -73,7 +73,7 @@ class ProductComponentInline(admin.TabularInline):
     verbose_name = 'komponent'
 
 
-class ProductAdmin(DraggableMPTTAdmin):
+class ProductAdmin(admin.ModelAdmin):
     mptt_indent_field = "name"
     list_filter = ('parent',)
     autocomplete_fields = ('parent',)
@@ -99,7 +99,7 @@ class ProductAdmin(DraggableMPTTAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ('tree_actions', 'indented_title', 'tannarx', 'get_price', 'get_total_new', 'non_sold_price',)
+            return ( 'tannarx', 'get_price', 'get_total_new', 'non_sold_price',)
         else:
             return ('tree_actions', 'indented_title', 'get_total_new',)
 
