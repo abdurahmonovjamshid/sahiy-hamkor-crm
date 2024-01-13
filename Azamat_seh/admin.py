@@ -79,8 +79,6 @@ class ProductAdmin(DraggableMPTTAdmin):
     autocomplete_fields = ('parent',)
     search_fields = ('name',)
     inlines = [ProductComponentInline]
-    list_filter = ['name']
-    search_fields = ('name',)
 
     change_list_template = 'admin/product_change.html'
 
@@ -92,9 +90,8 @@ class ProductAdmin(DraggableMPTTAdmin):
         )
         if not request.user.is_superuser:
             print('/'*88)
-            price_fields = ('price',)
             fieldsets[0][1]['fields'] = tuple(
-                field for field in fieldsets[0][1]['fields'] if field not in price_fields)
+    field for field in fieldsets[0][1]['fields'] if field not in ('price',))
         return fieldsets
 
     def get_list_display(self, request):
@@ -110,12 +107,6 @@ class ProductAdmin(DraggableMPTTAdmin):
             return '-'
     get_total_new.short_description = 'Ishlab chiqarilganlar soni'
 
-    def get_total_sold(self, obj):
-        if obj.parent:
-            return obj.total_sold
-        else:
-            return '-'
-    get_total_sold.short_description = 'Sotilganlar soni'
 
     def get_price(self, obj):
         if obj.parent:
