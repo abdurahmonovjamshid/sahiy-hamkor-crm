@@ -147,6 +147,11 @@ class Sales(models.Model):
         sales_events = self.selling_cut.all()
         total_price = sum(event.total_sold_price for event in sales_events)
         return total_price
+    
+    def save(self, *args, **kwargs):
+        self.buyer = self.buyer.title()
+        self.seller = self.seller.title()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         total_price = self.calculate_total_price()

@@ -107,6 +107,10 @@ class Selling(models.Model):
     class Meta:
         verbose_name = 'Sotilgan Mahsulot '
         verbose_name_plural = 'Sotuvlar'
+    
+    def save(self, *args, **kwargs):
+        self.buyer = self.buyer.title()
+        super().save(*args, **kwargs)
 
     def get_total_price_by_currency(self):
         total_price = self.payment.values(

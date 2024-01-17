@@ -18,6 +18,13 @@ from .models import (CuttingEvent, Product, ProductProduction,
                      ProductReProduction, Sales, SalesEvent, SalesEvent2,
                      Warehouse, Component)
 
+sales = Sales.objects.all()
+
+for sale in sales:
+    sale.buyer = sale.buyer.title()
+    sale.seller = sale.seller.title()
+    sale.save()
+
 
 @login_required
 def component_export_excel(request):

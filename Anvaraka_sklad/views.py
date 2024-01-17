@@ -1,6 +1,12 @@
 from django.db.models.signals import post_delete, post_save, pre_save
-from . models import Warehouse, Sales, Product, ProductComponent
+from . models import Warehouse, Sales, Product, ProductComponent, Selling
 from django.dispatch import receiver
+
+sales = Selling.objects.all()
+
+for sale in sales:
+    sale.buyer = sale.buyer.title()
+    sale.save()
 
 
 @receiver(post_save, sender=Warehouse)

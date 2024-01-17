@@ -16,6 +16,15 @@ from conf import settings
 
 from .models import (Product, ProductProduction, Sales, SalesEvent, Warehouse)
 
+from .models import Sales
+
+sales = Sales.objects.all()
+
+for sale in sales:
+    sale.buyer = sale.buyer.title()
+    sale.seller = sale.seller.title()
+    sale.save()
+
 
 @receiver(post_save, sender=ProductProduction)
 def subtract_component_total(sender, instance, created, **kwargs):
@@ -30,7 +39,7 @@ def subtract_component_total(sender, instance, created, **kwargs):
                 instance.quantity
             component = product_component.component
             component.total -= total_quantity_by_component
-            
+
             if component.total < 0:
                 component.total = 0
 

@@ -185,6 +185,11 @@ class Sales(models.Model):
         total_price = sum(event.total_sold_price for event in sales_events)
         return total_price
 
+    def save(self, *args, **kwargs):
+        self.buyer = self.buyer.title()
+        self.seller = self.seller.title()
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Sotuv '
         verbose_name_plural = "Sotuv Bo'limi "
