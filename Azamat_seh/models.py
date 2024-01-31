@@ -58,6 +58,8 @@ class Product(MPTTModel):
 
     total_new = models.IntegerField(
         default=0, verbose_name="Ishlab chiqarilganlar soni")
+    
+    weight = models.FloatField(verbose_name='Vazni (kg)')
 
     class Meta:
         verbose_name = 'Tovar '

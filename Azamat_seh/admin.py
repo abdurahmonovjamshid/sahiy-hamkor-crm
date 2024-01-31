@@ -36,7 +36,8 @@ class ComponentAdmin(DraggableMPTTAdmin):
             total_child_price = obj.children.annotate(total_price=F(
                 'price') * F('total')).aggregate(total=Sum('total_price'))['total']
             return "{:,.2f}".format(total_child_price).rstrip("0").rstrip(".")+'sum'
-        formatted_price = "{:,.1f}".format(obj.total * obj.price)
+        formatted_price = "{:,.1f}".format(
+            obj.total * obj.price).rstrip("0").rstrip(".")
         return formatted_price+' sum'
 
     get_total_price.short_description = 'Mavjud komponent narxi'
@@ -44,7 +45,7 @@ class ComponentAdmin(DraggableMPTTAdmin):
     def get_price(self, obj):
         if not obj.parent:
             return '-'
-        formatted_price = "{:,.1f}".format(obj.price)
+        formatted_price = "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")
         return formatted_price+' sum'
     get_price.short_description = 'Narxi'
     get_price.admin_order_field = 'price'
@@ -85,13 +86,13 @@ class ProductAdmin(DraggableMPTTAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
-                'fields': ('parent', 'name', 'price', 'total_new',),
+                'fields': ('parent', 'name', 'price', 'weight', 'total_new',),
             }),
         )
         if not request.user.is_superuser:
             print('/'*88)
             fieldsets[0][1]['fields'] = tuple(
-    field for field in fieldsets[0][1]['fields'] if field not in ('price',))
+                field for field in fieldsets[0][1]['fields'] if field not in ('price',))
         return fieldsets
 
     def get_list_display(self, request):
@@ -107,10 +108,9 @@ class ProductAdmin(DraggableMPTTAdmin):
             return '-'
     get_total_new.short_description = 'Ishlab chiqarilganlar soni'
 
-
     def get_price(self, obj):
         if obj.parent:
-            return str(obj.price)+' sum'
+            return "{:,.2f}".format(obj.price).rstrip("0").rstrip(".")+' sum'
         else:
             return '-'
     get_price.short_description = 'Sotuv narxi'
@@ -118,7 +118,7 @@ class ProductAdmin(DraggableMPTTAdmin):
     def non_sold_price(self, obj):
         if obj.parent:
             formatted_price = "{:,.1f}".format(
-                obj.price*(obj.total_new))
+                obj.price*(obj.total_new)).rstrip("0").rstrip(".")
             return formatted_price+' sum'
         else:
             total_price = obj.children.aggregate(
@@ -131,7 +131,7 @@ class ProductAdmin(DraggableMPTTAdmin):
             product_price = 0
             for productcomponent in obj.productcomponent_set.all():
                 product_price += productcomponent.quantity*productcomponent.component.price
-            return "{:,.1f}".format(product_price)+' sum'
+            return "{:,.1f}".format(product_price).rstrip("0").rstrip(".")+' sum'
         else:
             return '-'
     tannarx.short_description = 'Tan narxi'
@@ -166,18 +166,32 @@ class ProductProductionAdmin(admin.ModelAdmin):
 
         # Calculate total price
 
-        summary = queryset.values('product__name').annotate(
-            total_quantity=Sum(F('quantity')))
+        summary = queryset.values('product__parent__name', 'product__weight').annotate(
+            total_quantity=Sum('quantity'))
         summary_list = {}
         for result in summary:
-            product__name = result['product__name']
-            total_quantity = result['total_quantity']
+            product__name = result['product__parent__name']
+            total_quantity = result['total_quantity']*result['product__weight']
             if product__name in summary_list:
                 summary_list[product__name] += total_quantity
             else:
                 summary_list[product__name] = total_quantity
 
         sorted_data = sorted(summary_list.items(),
+                             key=lambda x: x[1], reverse=True)
+        
+        summary = queryset.values('product__name', 'product__weight').annotate(
+            total_quantity=Sum('quantity'))
+        summary_list = {}
+        for result in summary:
+            product__name = result['product__name']
+            total_quantity = result['total_quantity']*result['product__weight']
+            if product__name in summary_list:
+                summary_list[product__name] += total_quantity
+            else:
+                summary_list[product__name] = total_quantity
+
+        sorted_data += sorted(summary_list.items(),
                              key=lambda x: x[1], reverse=True)
 
         sorted_dict = {item[0]: item[1] for item in sorted_data}
@@ -245,7 +259,7 @@ class WarehouseAdmin(admin.ModelAdmin):
         return response
 
     def get_price(self, obj):
-        formatted_price = "{:,.1f}".format(obj.price)
+        formatted_price = "{:,.1f}".format(obj.price).rstrip("0").rstrip(".")
         return formatted_price+' sum'
 
     get_price.short_description = 'Narxi'
