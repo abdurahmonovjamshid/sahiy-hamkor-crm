@@ -171,33 +171,50 @@ class ProductProductionAdmin(admin.ModelAdmin):
         summary_list = {}
         for result in summary:
             product__name = result['product__parent__name']
-            total_quantity = result['total_quantity']*result['product__weight']
+            total_weight = result['total_quantity']*result['product__weight']
+
             if product__name in summary_list:
-                summary_list[product__name] += total_quantity
+                summary_list[product__name] += total_weight
             else:
-                summary_list[product__name] = total_quantity
+                summary_list[product__name] = total_weight
 
         sorted_data = sorted(summary_list.items(),
                              key=lambda x: x[1], reverse=True)
-        
+
         summary = queryset.values('product__name', 'product__weight').annotate(
             total_quantity=Sum('quantity'))
+
         summary_list = {}
+        summary_list2 = {}
         for result in summary:
             product__name = result['product__name']
-            total_quantity = result['total_quantity']*result['product__weight']
+            total_weight = result['total_quantity']*result['product__weight']
+            total_quantity = result['total_quantity']
+
             if product__name in summary_list:
-                summary_list[product__name] += total_quantity
+                summary_list[product__name] += total_weight
             else:
-                summary_list[product__name] = total_quantity
+                summary_list[product__name] = total_weight
+            ############################
+            if product__name in summary_list2:
+                summary_list2[product__name] += total_quantity
+            else:
+                summary_list2[product__name] = total_quantity
 
         sorted_data += sorted(summary_list.items(),
-                             key=lambda x: x[1], reverse=True)
+                              key=lambda x: x[1], reverse=True)
 
         sorted_dict = {item[0]: item[1] for item in sorted_data}
 
+        items_with_quantity = []
+        for name, quantity in sorted_dict.items():
+            items_with_quantity.append((name, "{:,.1f}".format(quantity).rstrip("0").rstrip(
+                "."), "{:,.1f}".format(summary_list2.get(name, 0)).rstrip("0").rstrip(".")))
+
+        print(items_with_quantity)
+
         try:
-            response.context_data['total'] = sorted_dict
+            response.context_data['total'] = items_with_quantity
         except:
             pass
 
