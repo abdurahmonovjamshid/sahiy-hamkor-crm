@@ -172,12 +172,12 @@ class ProductAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             ('Umumiy malumot', {
-                'fields': ('name', 'price', 'total_new', 'total_cut'),
+                'fields': ('name', 'price', 'invalid_price', 'total_new', 'total_cut'),
             }),
         )
         if not request.user.is_superuser:
             print('/'*88)
-            price_fields = ('price',)
+            price_fields = ('price', 'invalid_price')
             fieldsets[0][1]['fields'] = tuple(
                 field for field in fieldsets[0][1]['fields'] if field not in price_fields)
         return fieldsets

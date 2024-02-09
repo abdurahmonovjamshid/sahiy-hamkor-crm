@@ -50,6 +50,7 @@ class Component(MPTTModel):
 
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nomi')
+    invalid_price = models.FloatField(verbose_name='Yaroqsiz tovar narxi')
     price = models.FloatField(verbose_name='Sotuv narxi')
 
     total_new = models.IntegerField(
@@ -262,7 +263,7 @@ class SalesEvent2(models.Model):
                     "sotilgan qiymat kesilmagan qiymatdan oshib ketdi")
 
     def save(self, *args, **kwargs):
-        self.single_sold_price = self.product.price
+        self.single_sold_price = self.product.invalid_price
         self.total_sold_price = self.single_sold_price * self.quantity_sold
 
         self.profit = self.total_sold_price - \
