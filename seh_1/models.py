@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -136,10 +137,19 @@ class ProductReProduction(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Xodim')
     date = models.DateTimeField(
         auto_now_add=True, verbose_name='Kesilgan vaqti')
+    
+    @property
+    def total_quantity_cut(obj):
+        return obj.cutting.aggregate(
+            total=Sum('quantity_cut'))['total']
+    
+    @property
+    def get_cutting_events(obj):
+        cutting_events = obj.cutting.all()
+        return ", ".join(str(str(cutting_event.quantity_cut) + ' ta ' + cutting_event.product.name) for cutting_event in cutting_events)
 
     def __str__(self):
-        formatted_date = self.date.strftime('%B %Y, %H:%M')
-        return f'{self.user} ({formatted_date})'
+        return f'{self.series} - {self.get_cutting_events}'
 
     class Meta:
         verbose_name = 'Kesilgan tovarlar '
@@ -180,7 +190,7 @@ class Sales(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Xodim')
     date = models.DateTimeField(
         auto_now_add=True, verbose_name='Sotilgan sana')
-    
+
     def calculate_total_price(self):
         sales_events = self.selling_cut.all()
         total_price = sum(event.total_sold_price for event in sales_events)
