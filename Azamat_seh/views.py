@@ -40,9 +40,6 @@ def subtract_component_total(sender, instance, created, **kwargs):
             component = product_component.component
             component.total -= total_quantity_by_component
 
-            if component.total < 0:
-                component.total = 0
-
             component.save()
 
 
