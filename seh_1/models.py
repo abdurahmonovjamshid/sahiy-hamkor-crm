@@ -184,8 +184,8 @@ class CuttingEvent(models.Model):
 
 class Sales(models.Model):
     series = models.CharField(max_length=50, verbose_name="Seriya")
-    buyer = models.CharField(max_length=250, verbose_name='Haridor')
-    seller = models.CharField(max_length=250, verbose_name='Sotuvchi')
+    buyer = models.CharField(max_length=250, verbose_name='Sotuvchi')
+    seller = models.CharField(max_length=250, verbose_name='Haridor')
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Xodim')
     date = models.DateTimeField(

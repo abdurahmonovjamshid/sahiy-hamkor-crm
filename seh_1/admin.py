@@ -452,7 +452,7 @@ class SalesEventInline2(admin.TabularInline):
 
 class SalesAdmin(admin.ModelAdmin):
     inlines = [SalesEventInline, SalesEventInline2]
-    list_filter = ['buyer', 'seller', 'user', 'date']
+    list_filter = ['seller', 'buyer', 'user', 'date']
     search_fields = ['buyer', 'seller']
     date_hierarchy = 'date'
     # readonly_fields = ('seller',)
@@ -495,10 +495,10 @@ class SalesAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_superuser:
-            return ['buyer', 'seller',
+            return ['seller', 'buyer',
                     'get_sales_events', 'get_sales_event2s', 'get_total_price', 'get_total_profit', 'user', 'date']
         else:
-            return ['buyer', 'seller',
+            return ['seller', 'buyer',
                     'get_sales_events_user', 'get_sales_event2s_user', 'user', 'date']
 
     def get_total_price(self, obj):
